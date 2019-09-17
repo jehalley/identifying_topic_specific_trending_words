@@ -98,17 +98,7 @@ reddit_sr_total_wc = reddit_wc.groupby('subreddit','day_window').count()
 reddit_sr_total_wc.show()
 
 
-#try to get individual word counts for each subreddit
-reddit_sr_total_wc = reddit_total_wc.groupby('subreddit','day_window').withColumn('word', f.explode(f.split(f.col('body'), '[\W_]+')))\
-    .groupBy('word')\
-    .count()\
-    .sort('count', ascending=False)\
-    .show()
-
-
-reddit_sr_total_wc = reddit_total_wc.withColumn('word', f.explode(f.split(f.col('body'), '[\W_]+'))\
-                                            
-
+# get individual word counts for each subreddit for a day window
 reddit_wc2 = reddit_wc.withColumn('word', f.explode(f.split(f.col('body'), '[\W_]+')))\
     .groupBy('subreddit','day_window','word')\
     .count()\
