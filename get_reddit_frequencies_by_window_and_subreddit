@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Sep 16 13:37:31 2019
+
+@author: JeffHalley
+"""
+from bs4 import BeautifulSoup
+from bs4 import NavigableString
+import requests
+import unicodedata
+from datetime import datetime
+from nltk.corpus import stopwords
+import os
+import pandas as pd
+from pandas import Timestamp, Series, date_range
+import re
+import string
+from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import unix_timestamp, from_unixtime, to_date, to_timestamp, lit, col, window
+import pyspark.sql.functions as f
+from nltk.corpus import stopwords
+from pyspark.ml.feature import StopWordsRemover
+
+def make_stopwords_list():
+    allStopwords = stopwords.words(('arabic',
+ 'azerbaijani',
+ 'danish',
+ 'dutch',
+ 'english',
+ 'finnish',
+ 'french',
+ 'german',
+ 'greek',
+ 'hungarian',
+ 'indonesian',
+ 'italian',
+ 'kazakh',
+ 'nepali',
+ 'norwegian',
+ 'portuguese',
+ 'romanian',
+ 'russian',
+ 'spanish',
+ 'swedish',
+ 'turkish'))
+    newStopWords = ['like','rt','nan',' ','','im']
+    allStopwords.extend(newStopWords)
+    return allStopwords
+
+def get_subreddit_topics_df(page):
+    soup = BeautifulSoup(open(page), 'html.parser')
+    subreddit_topics = pd.DataFrame(columns=['topic', 'subreddit'])
+    h2s_and_h3s = soup.find_all(['h2','h3'])
+    for h2 in h2s_and_h3s:
+        header = h2.strong
+        if header is not None:
+            topic = header.text
+        
+        node = h2.next_element.next_element.next_element.next_element
+        if isinstance(node, NavigableString):
+            continue
+        if node is not None:
+            subreddit = node.text.splitlines()
+        subreddits_df = pd.DataFrame(subreddit, columns = ['subreddit'])
+        subreddits_df['topic'] = topic
+        subreddit_topics = pd.concat([subreddit_topics, subreddits_df], ignore_index=True, sort=True)
+    
+    for h2 in h2s_and_h3s:
+        header = h2.em
+        if header is not None:
+            topic = header.text
+        
+        node = h2.next_element.next_element.next_element.next_element
+        if isinstance(node, NavigableString):
+            continue
+        if node is not None:
+            subreddit = node.text.splitlines()
+        subreddits_df = pd.DataFrame(subreddit, columns = ['subreddit'])
+        subreddits_df['topic'] = topic
+        subreddit_topics = pd.concat([subreddit_topics, subreddits_df], ignore_index=True, sort=True)
+    return subreddit_topics
+
+def get_vg_subs(list_page):
+    vg_subreddits = []
+    vg_soup = BeautifulSoup(open(list_page), 'html.parser')
+    wiki = vg_soup.find("div", {"class": "md wiki"})        # Get all the html within the div with class "md wiki"
+     
+    for p in wiki.find_all('p'):                         # For every paragraph tag within...
+        for a in p.find_all('a', {'rel': 'nofollow'}):   # If it contains an anchor (<a>) tag with rel = "nofollow...
+     
+            tag_text = str(a.text)                       # Get the text of the anchor tag
+     
+            if tag_text.startswith('/r/'):               # If it starts with "/r/"....
+                vg_subreddits.append(tag_text)                 
+    
+    vg_subs = pd.DataFrame(columns=['topic', 'subreddit'])
+    vg_subs['subreddit'] = vg_subreddits
+    vg_subs['topic'] = "video games"
+    return vg_subs
+
+def get_pyspark_df(directory_path):
+    #start spark session
+    spark = SparkSession \
+    .builder \
+    .appName("Reddit DataFrame") \
+    .config("spark.some.config.option", "some-value") \
+    .getOrCreate()
+    
+    #read in jsons as pyspark df
+    reddit_df = spark.read.json(reddit_directory_path)
+    
+    #drop unneeded columns
+    columns_to_drop = ['archived',
+                       'author',
+                       'author_cakeday',
+                       'author_flair_background_color',
+                       'author_flair_css_class',
+                       'author_flair_richtext',
+                       'author_flair_template_id',
+                       'author_flair_text',
+                       'author_flair_text_color',
+                       'author_flair_type',
+                       'author_fullname',
+                       'can_gild',
+                       'can_mod_post',
+                       'collapsed',
+                       'collapsed_reason',
+                       'controversiality',
+                       'distinguished',
+                       'edited',
+                       'gilded',
+                       'id',
+                       'is_submitter',
+                       'link_id',
+                       'no_follow',
+                       'parent_id',
+                       'permalink',
+                       'removal_reason',
+                       'retrieved_on',
+                       'score',
+                       'score_hidden',
+                       'send_replies',
+                       'stickied',
+                       'subreddit_id',
+                       'subreddit_name_prefixed',
+                       'subreddit_type',
+                       ]
+    reddit_df = reddit_df.drop(*columns_to_drop)
+    
+    #convert created at utc to string date and make new column
+    reddit_df = reddit_df.withColumn('date', from_unixtime('author_created_utc'))
+    
+    #bin comments to 1 day windows and make new column saving the window
+    reddit_df = reddit_df.withColumn(
+    "day_window",
+    window(
+         col('date'), 
+         windowDuration="1 day"
+    ).cast("struct<start:string,end:string>")
+    )
+    
+    #make column with topic for each subreddit
+    #remove r/ fromsubreddit topic names
+    subreddit_topics_df['subreddit'] = subreddit_topics_df['subreddit'].map(lambda x: x.lstrip('r/'))
+    subreddit_topics_df = subreddit_topics_df.groupby('subreddit')['topic'].apply(lambda x: x.values.tolist())
+    subreddit_topics_df = subreddit_topics_df.to_frame()
+    subreddit_topics_df.reset_index(level=0, inplace=True)
+    #convert to spark df
+    schema = StructType([
+    StructField('subreddit', StringType(), True),
+    StructField('topic', StringType(), True)])
+    subreddit_topics_spark = spark.createDataFrame(subreddit_topics_df, schema)
+    
+    reddit_df = reddit_df.join(subreddit_topics_spark, on = 'subreddit', how = 'left_outer')
+    
+    
+    #split comment body into indivdidual words at any nonword character, group by subreddit and day window 
+    reddit_df = reddit_df.withColumn('word', f.explode(f.split(f.col('body'), '[\W_]+')))\
+    .groupBy('topic','day_window','word')\
+    .count()\
+    .sort('count', ascending=False)
+    
+    #clean dataframe
+    reddit_df = reddit_df.filter(reddit_df.topic. isNotNull())
+     
+    
+    
+test = reddit_df2.filter(reddit_df2['subreddit'] == 'nba')
+test.show() 
+allStopwords = make_stopwords_list()    
+page = "/Users/JeffHalley/Downloads/list_of_subreddits.htm"
+subreddit_topics_df = get_subreddit_topics_df(page)
+video_game_page = "/Users/JeffHalley/Downloads/video_game_list_reddit.htm"
+vg_subs_df = get_vg_subs(video_game_page)
+subreddit_topics_df = pd.concat([subreddit_topics_df, vg_subs_df], ignore_index=True, sort=True)
+reddit_directory_path = '/Users/JeffHalley/Downloads/RC_2018-07_test3'
