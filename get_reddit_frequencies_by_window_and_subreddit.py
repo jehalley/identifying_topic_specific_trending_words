@@ -132,6 +132,9 @@ def get_pyspark_df(directory_path):
     columns_to_drop = ["day_window","date_time"]
     reddit_df = reddit_df.drop(*columns_to_drop)
     
+    #write it
+    reddit_df.write.partitionBy("topic","date").parquet("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output_parquet")
+    
     #reddit_df.filter(reddit_df['word'] == 'lebron').show()
     #reddit_df.show()
     #reddit_df.count()
@@ -145,7 +148,7 @@ if __name__ == "__main__":
     
     #reddit_df.collect()
     #reddit_df.write.format("csv").save("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output.csv")
-    reddit_df.write.partitionBy("topic","date").parquet("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output_parquet")
+    
     
     #subreddit_topics_csv = '/Users/JeffHalley/subreddit_topics.csv'
     #reddit_directory_path = '/Users/JeffHalley/Downloads/RC_2018-07_test3/xaa.json'
