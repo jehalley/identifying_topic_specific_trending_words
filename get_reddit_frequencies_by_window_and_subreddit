@@ -74,14 +74,13 @@ def get_pyspark_df(directory_path):
     )
  
     #convert subreddit topics csv to spark df
-    #subreddit_topics = spark.read.csv(subbredit_topics_csv, header='true', inferSchema='true')
-    subreddit_topics = spark.read.csv("s3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics.csv",header='true', inferSchema='true')
-    
+    subreddit_topics = spark.read.csv(subreddit_topics_csv, header='true', inferSchema='true')
     #reddit_df = reddit_df.join(subreddit_topics, on = 'subreddit', how = 'left_outer')
     reddit_df = reddit_df.join(broadcast(subreddit_topics), on = 'subreddit', how = 'left_outer')
     
     #split comment body into indivdidual words at any nonword character, group by subreddit and day window 
     reddit_df = reddit_df.withColumn('word', f.explode(f.split(f.col('body'), '[\W_]+')))\
+    .dropDuplicates()\
     .groupBy('topic','day_window','word')\
     .count()\
     .sort('count', ascending=False)
@@ -124,18 +123,18 @@ def get_pyspark_df(directory_path):
     
     
     
-    #reddit_df.filter(reddit_df['word'] == 'lebron').show()
-    
-    
-    reddit_df.show()
-    reddit_df.count()
-    spark.stop()
+    reddit_df.filter(reddit_df['word'] == 'lebron').show()
+    #reddit_df.show()
+    #reddit_df.count()
+    #spark.stop()
  
 if __name__ == "__main__":
-    subbredit_topics_csv = 's3://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics.csv'
-    reddit_directory_path = 's3://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
+    subreddit_topics_csv = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics.csv'
+    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
     reddit_df = get_pyspark_df(reddit_directory_path)
     #reddit_df.toPandas().to_csv('reddit_df_from_pyspark.csv')
     
-    reddit_df.write.format("csv").save("s3://jeff-halley-s3/split_reddit_comments_2018_07/output.csv")
+    reddit_df.write.format("csv").save("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output.csv")
     
+    #subreddit_topics_csv = '/Users/JeffHalley/subreddit_topics.csv'
+    #reddit_directory_path = '/Users/JeffHalley/Downloads/RC_2018-07_test3/xaa.json'
