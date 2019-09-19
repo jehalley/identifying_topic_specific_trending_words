@@ -8,7 +8,6 @@ Created on Mon Sep 16 13:37:31 2019
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, col, window, broadcast
 import pyspark.sql.functions as f
-
 from pyspark.sql.window import Window
 
 
@@ -62,13 +61,13 @@ def get_pyspark_df(directory_path):
     reddit_df = reddit_df.drop(*columns_to_drop)
     
     #convert created at utc to string date and make new column
-    reddit_df = reddit_df.withColumn('date', from_unixtime('author_created_utc'))
+    reddit_df = reddit_df.withColumn('date_time', from_unixtime('author_created_utc'))
     
     #bin comments to 1 day windows and make new column saving the window
     reddit_df = reddit_df.withColumn(
     "day_window",
     window(
-         col('date'), 
+         col('date_time'), 
          windowDuration="1 day"
     ).cast("struct<start:string,end:string>")
     )
@@ -80,16 +79,15 @@ def get_pyspark_df(directory_path):
     
     #split comment body into indivdidual words at any nonword character, group by subreddit and day window 
     reddit_df = reddit_df.withColumn('word', f.explode(f.split(f.col('body'), '[\W_]+')))\
-    .dropDuplicates()\
-    .groupBy('topic','day_window','word')\
-    .count()\
-    .sort('count', ascending=False)
+    .groupBy('topic','day_window','word','date_time')\
+    .count()
+    
+    #clean dataframe
+    reddit_df = reddit_df.filter(reddit_df.topic. isNotNull())
+    reddit_df = reddit_df.dropDuplicates()
     
     #for topics with multiple topics split into single topics
     reddit_df = reddit_df.withColumn('topic', f.explode(f.split(f.col('topic'), ',')))
- 
-    #clean dataframe
-    reddit_df = reddit_df.filter(reddit_df.topic. isNotNull())
     
     #get total count of each word across all of reddit for a day and add it to the reddit_df
     reddit_total_wc = reddit_df.groupby('word','day_window').sum()
@@ -112,7 +110,13 @@ def get_pyspark_df(directory_path):
                           (f.col("count_per_day_all")/f.col("total_word_count_per_day_all"))))
     
     #make column with previou day adjusted frequency
-    windowSpec = Window.orderBy(reddit_df['day_window'])
+    #windowSpec = Window.orderBy(reddit_df['day_window'])
+    
+    windowSpec = \
+     Window \
+     .partitionBy(reddit_df['topic'])\
+     .orderBy(reddit_df['day_window'])
+    
     reddit_df = reddit_df.withColumn('prev_day_adjusted_freq',
                                     f.lag(reddit_df["sub_freq_to_all_freq_ratio"])
                                     .over(windowSpec))
@@ -121,9 +125,14 @@ def get_pyspark_df(directory_path):
     reddit_df = reddit_df.withColumn('change_in_frequency_day', 
                                      (f.col('sub_freq_to_all_freq_ratio') - f.col('prev_day_adjusted_freq')))
     
+    #get just date
+    reddit_df = reddit_df.withColumn("date", f.to_date(f.col("date_time")))
     
+    #remove uneeded columns
+    columns_to_drop = ["day_window","date_time"]
+    reddit_df = reddit_df.drop(*columns_to_drop)
     
-    reddit_df.filter(reddit_df['word'] == 'lebron').show()
+    #reddit_df.filter(reddit_df['word'] == 'lebron').show()
     #reddit_df.show()
     #reddit_df.count()
     #spark.stop()
@@ -134,7 +143,10 @@ if __name__ == "__main__":
     reddit_df = get_pyspark_df(reddit_directory_path)
     #reddit_df.toPandas().to_csv('reddit_df_from_pyspark.csv')
     
-    reddit_df.write.format("csv").save("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output.csv")
+    #reddit_df.collect()
+    #reddit_df.write.format("csv").save("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output.csv")
+    reddit_df.write.partitionBy("topic","date").parquet("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output_parquet")
     
     #subreddit_topics_csv = '/Users/JeffHalley/subreddit_topics.csv'
     #reddit_directory_path = '/Users/JeffHalley/Downloads/RC_2018-07_test3/xaa.json'
+    
