@@ -133,7 +133,7 @@ def get_pyspark_df(directory_path):
     reddit_df = reddit_df.drop(*columns_to_drop)
     
     #write it
-    reddit_df.write.partitionBy("topic","date").parquet("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output_parquet")
+    reddit_df.write.partitionBy("topic","date").parquet("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output_parquet_topic_date")
     
     #reddit_df.filter(reddit_df['word'] == 'lebron').show()
     #reddit_df.show()
