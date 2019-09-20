@@ -132,8 +132,18 @@ def get_pyspark_df(directory_path):
     columns_to_drop = ["day_window","date_time"]
     reddit_df = reddit_df.drop(*columns_to_drop)
     
+    url = "jdbc:postgresql://10.0.0.8:5431/word"
+
+    properties = {
+        "user": "jh",
+        "password": "jh",
+        "driver": "org.postgresql.Driver"
+    }
+    
+    reddit_df.write.jdbc(url=url, table="reddit_results", mode= "append", properties=properties)
+        
     #write it
-    reddit_df.write.partitionBy("topic","date").parquet("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output_parquet_topic_date")
+    #reddit_df.write.partitionBy("topic","date").parquet("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output_parquet_topic_date")
     
     #reddit_df.filter(reddit_df['word'] == 'lebron').show()
     #reddit_df.show()
