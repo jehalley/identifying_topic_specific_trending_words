@@ -103,7 +103,7 @@ def get_tokenized_df(reddit_df):
     
 if __name__ == "__main__":
     spark = start_spark_session()
-    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xci'
+    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
     subreddit_topics_csv = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics.csv'
     reddit_df = get_reddit_df(reddit_directory_path)
     reddit_df = drop_irrelevant_columns(reddit_df)
