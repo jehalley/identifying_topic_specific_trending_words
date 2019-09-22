@@ -120,7 +120,7 @@ if __name__ == "__main__":
     reddit_df = get_total_word_count_per_day_topic(reddit_df)
     reddit_df = get_sub_freq_to_all_freq_ratio(reddit_df)
     reddit_df = get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df)
-    reddit_df = get_change_in_rolling_average_per_day(reddit_df)
+    #reddit_df = get_change_in_rolling_average_per_day(reddit_df)
     reddit_df = get_date_column(reddit_df) 
     write_to_database(reddit_df)
 
