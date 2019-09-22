@@ -123,16 +123,16 @@ if __name__ == "__main__":
     reddit_df = get_date_column(reddit_df) 
     write_to_database(reddit_df)
 
-#test stuff
-spark = start_spark_session()
-reddit_parquet_path = "/Users/JeffHalley/Downloads/split_reddit_comments_2018_07/output_parquet"
-reddit_df = get_reddit_df_from_parquet(reddit_parquet_path)
-reddit_df = get_word_counts(reddit_df)
-reddit_df = get_word_counts_for_combined(reddit_df)
-reddit_df = get_total_word_count_per_day_all(reddit_df)
-reddit_df = get_total_word_count_per_day_topic(reddit_df)
-reddit_df = get_sub_freq_to_all_freq_ratio(reddit_df)
-reddit_df = get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df)
-reddit_df = get_change_in_rolling_average_per_day(reddit_df)
-reddit_df = get_date_column(reddit_df)
-reddit_df.show()
+##test stuff
+#spark = start_spark_session()
+#reddit_parquet_path = "/Users/JeffHalley/Downloads/split_reddit_comments_2018_07/output_parquet"
+#reddit_df = get_reddit_df_from_parquet(reddit_parquet_path)
+#reddit_df = get_word_counts(reddit_df)
+#reddit_df = get_word_counts_for_combined(reddit_df)
+#reddit_df = get_total_word_count_per_day_all(reddit_df)
+#reddit_df = get_total_word_count_per_day_topic(reddit_df)
+#reddit_df = get_sub_freq_to_all_freq_ratio(reddit_df)
+#reddit_df = get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df)
+#reddit_df = get_change_in_rolling_average_per_day(reddit_df)
+#reddit_df = get_date_column(reddit_df)
+#reddit_df.show()

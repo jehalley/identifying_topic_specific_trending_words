@@ -103,7 +103,7 @@ def get_tokenized_df(reddit_df):
     
 if __name__ == "__main__":
     spark = start_spark_session()
-    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
+    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xci'
     subreddit_topics_csv = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics.csv'
     reddit_df = get_reddit_df(reddit_directory_path)
     reddit_df = drop_irrelevant_columns(reddit_df)
@@ -124,5 +124,5 @@ if __name__ == "__main__":
 #subreddit_topics = get_subreddit_topics_df(subreddit_topics_csv)
 #reddit_df = get_subreddit_topics_column(reddit_df,subreddit_topics)
 #reddit_df = get_individual_words(reddit_df)
-reddit_df.write.mode('append').parquet("/Users/JeffHalley/Downloads/split_reddit_comments_2018_07/output_parquet")
+#reddit_df.write.mode('append').parquet("/Users/JeffHalley/Downloads/split_reddit_comments_2018_07/output_parquet")
 
