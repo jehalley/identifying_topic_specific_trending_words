@@ -24,7 +24,7 @@ def get_reddit_df_from_parquet(reddit_parquet_path):
 
 def get_word_counts(reddit_df):                              
     #split comment body into indivdidual words at any nonword character, group by subreddit and day window 
-    reddit_df = reddit_df.orderBy(['word','day_window'],ascending=False)
+    #reddit_df = reddit_df.orderBy(['word','day_window'],ascending=False)
     reddit_df = reddit_df\
     .groupBy('topic','day_window','word','date_time')\
     .count()
@@ -60,13 +60,13 @@ def get_sub_freq_to_all_freq_ratio(reddit_df):
     return reddit_df
 
 
-def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
-    days = lambda i: i * 86400
-    reddit_df = reddit_df.withColumn('timestamp', reddit_df.date_time.cast('timestamp'))
-    w = (Window.orderBy(col('timestamp').cast('long')).rangeBetween(-days(5), 0))
-    reddit_df = reddit_df.withColumn('rolling_average', avg("sub_freq_to_all_freq_ratio").over(w))
-    reddit_df = reddit_df.drop('timestamp')
-    return reddit_df
+#def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
+#    days = lambda i: i * 86400
+#    reddit_df = reddit_df.withColumn('timestamp', reddit_df.date_time.cast('timestamp'))
+#    w = (Window.orderBy(col('timestamp').cast('long')).rangeBetween(-days(5), 0))
+#    reddit_df = reddit_df.withColumn('rolling_average', avg("sub_freq_to_all_freq_ratio").over(w))
+#    reddit_df = reddit_df.drop('timestamp')
+#    return reddit_df
 
 
 #def get_change_in_rolling_average_per_day(reddit_df):
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     reddit_df = get_total_word_count_per_day_all(reddit_df)
     reddit_df = get_total_word_count_per_day_topic(reddit_df)
     reddit_df = get_sub_freq_to_all_freq_ratio(reddit_df)
-    reddit_df = get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df)
+    #reddit_df = get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df)
     #reddit_df = get_change_in_rolling_average_per_day(reddit_df)
     reddit_df = get_date_column(reddit_df) 
     write_to_database(reddit_df)
