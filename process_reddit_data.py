@@ -21,6 +21,10 @@ def get_reddit_df_from_parquet(reddit_parquet_path):
     reddit_df = spark.read.parquet(reddit_parquet_path)
     return reddit_df
 
+def partition_df(reddit_df):
+    column_list = ["topic","word", "day_window"]
+    reddit_df = Window.partitionBy([col(x) for x in column_list])
+    return reddit_df
 
 def get_word_counts(reddit_df):                              
     #split comment body into indivdidual words at any nonword character, group by subreddit and day window 
