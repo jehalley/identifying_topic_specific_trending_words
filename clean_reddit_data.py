@@ -99,6 +99,8 @@ def get_tokenized_df(reddit_df):
     reddit_df = reddit_df.filter( reddit_df['word'].rlike('[a-zA-Z]'))
     #duplicates dropped to ignore cases of someone using a word in the same post
     reddit_df = reddit_df.dropDuplicates()
+    #order data in attempt to avoid request error
+    reddit_df = reddit_df.orderBy(['word','day_window'],ascending=False) 
     return reddit_df
     
 if __name__ == "__main__":
