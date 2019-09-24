@@ -182,8 +182,8 @@ def get_date_column(reddit_df):
     return reddit_df
 
 def write_to_database(reddit_df):
-    #url = "jdbc:postgresql://10.0.0.8:5431/word"
-    url = "jdbc:postgresql://10.0.0.8:5431/word/?useServerPrepStmts=false&rewriteBatchedStatements=true"
+    url = "jdbc:postgresql://10.0.0.8:5431/word"
+    #url = "jdbc:postgresql://10.0.0.8:5431/word/?useServerPrepStmts=false&rewriteBatchedStatements=true"
     properties = {
         "user": "jh",
         "password": "jh",
