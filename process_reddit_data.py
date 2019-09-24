@@ -18,9 +18,9 @@ def start_spark_session():
     return spark
 
 def get_reddit_df_from_parquet(reddit_parquet_path):
-    #column_list = ["topic","word", "day_window"]
     reddit_df = spark.read.parquet(reddit_parquet_path)
-    reddit_df = reddit_df.coalesce(30)
+    reddit_df = reddit_df.repartition("topic","word", "day_window")
+    #reddit_df = reddit_df.coalesce(30)
     return reddit_df
 
 #def get_partitioned_df(reddit_df):
