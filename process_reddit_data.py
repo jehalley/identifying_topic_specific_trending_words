@@ -106,7 +106,7 @@ def write_to_database(reddit_df):
         "password": "jh",
         "driver": "org.postgresql.Driver"
     }
-    reddit_df.write.jdbc(url=url, table="reddit_results_9_24", mode= "append", properties=properties)
+    reddit_df.write.jdbc(url=url, table="reddit_results_9_24_2nd_attempt", mode= "append", properties=properties)
         
     #write it
     #reddit_df.write.partitionBy("topic","date").parquet("s3a://jeff-halley-s3/split_reddit_comments_2018_07/output_parquet_topic_date")
