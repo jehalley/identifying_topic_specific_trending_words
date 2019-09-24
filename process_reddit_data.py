@@ -19,14 +19,11 @@ def start_spark_session():
 
 def get_reddit_df_from_parquet(reddit_parquet_path):
     reddit_df = spark.read.parquet(reddit_parquet_path)
-    reddit_df = reddit_df.repartition("topic","word", "day_window")
     #reddit_df = reddit_df.coalesce(30)
     return reddit_df
 
-#def get_partitioned_df(reddit_df):
-#    column_list = ["topic","word", "day_window"]
-#    reddit_df = Window.partitionBy([col(x) for x in column_list])
-#    return reddit_df
+def get_partitioned_df(reddit_df):
+    reddit_df = reddit_df.repartition("topic","word", "day_window")
 
 def get_word_counts(reddit_df):                              
     #split comment body into indivdidual words at any nonword character, group by subreddit and day window 
@@ -120,7 +117,7 @@ if __name__ == "__main__":
     spark = start_spark_session()
     reddit_parquet_path = "s3a://jeff-halley-s3/split_reddit_comments_2018_07/output_parquet"
     reddit_df = get_reddit_df_from_parquet(reddit_parquet_path)
-    #reddit_df = get_partitioned_df(reddit_df)
+    reddit_df = get_partitioned_df(reddit_df)
     reddit_df = get_word_counts(reddit_df)
     reddit_df = get_word_counts_for_combined(reddit_df)
     reddit_df = get_total_word_count_per_day_all(reddit_df)
