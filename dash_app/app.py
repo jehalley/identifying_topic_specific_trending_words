@@ -12,6 +12,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_table
 import pandas as pd
+import plotly
 import psycopg2
 import numpy as np
 
@@ -22,7 +23,7 @@ end_date_string = "2017-01-01"
 
 connection = psycopg2.connect(host='18.237.35.222', port=5431, user='jh', password='jh', dbname='word')
 #query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio  FROM reddit_results WHERE topic = 'Basketball' AND '[2016-01-01, 2017-01-01]'::daterange @> date ORDER BY sub_freq_to_all_freq_ratio  DESC LIMIT 10;"
-query = "SELECT topic, date, word, count,sub_freq_to_all_freq_ratio, rolling_average  FROM reddit_results WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY rolling_average;"
+query = "SELECT topic, date, word, count,sub_freq_to_all_freq_ratio, rolling_average FROM reddit_results WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY rolling_average DESC;"
 cursor = connection.cursor()
 cursor.execute(query)
 data = cursor.fetchall()
@@ -171,15 +172,18 @@ def update_ui(topic, date_range):
     data=df.to_dict('records')
     return data, query_data.to_json(date_format='iso', orient='split')
 
-@app.callback(Output('graph', 'figure'), [Input('query_results', 'children')])
+@app.callback(dash.dependencies.Output('graph', 'figure'), [dash.dependencies.Input('query_results', 'children')])
 def update_graph(jsonified_query_data):
-
-    # more generally, this line would be
     # json.loads(jsonified_cleaned_data)
-    dff = pd.read_json(jsonified_query_data, orient='split')
-
-    figure = create_figure(dff)
-    return figure
+    query_data = pd.read_json(jsonified_query_data, orient='split')
+    df = query_data.head(10)
+    words = df.word.unique().tolist()
+    fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=True,vertical_spacing=0.009,horizontal_spacing=0.009)
+    fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
+    for word in words:
+        word_results =  query_data[query_data['word'] == word][['count','date']].sort_values(by=['date'])
+        fig.append_trace({'x':word_results['date'].tolist(),'y':word_results['count'].tolist(),'type':'scatter','name': word},1,1)
+    return fig
 
 
 if __name__ == '__main__':
