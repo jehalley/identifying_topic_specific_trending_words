@@ -184,9 +184,10 @@ def get_date_column(reddit_df):
 def write_to_database(reddit_df):
     reddit_df.write\
     .format("org.apache.spark.sql.cassandra")\
-    .mode('append')\
+    .mode('overwrite')\
     .options(table="test", keyspace="word")\
     .save()
+    
 #    url = "jdbc:postgresql://10.0.0.8:5431/word"
 #    properties = {
 #        "user": "jh",
