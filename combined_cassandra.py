@@ -9,7 +9,11 @@ Created on Tue Sep 24 13:55:37 2019
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, col, window, broadcast, lower, explode, split, col, avg, sum, lag, to_date
 from pyspark.sql.window import Window
+from cassandra.cluster import Cluster
+import pyspark_cassandra
 
+#create cassandra cluster
+cluster = Cluster(["18.236.219.153" , "54.190.116.213", "34.212.36.241" ])
 
 def start_spark_session():
     spark = SparkSession \
@@ -181,13 +185,16 @@ def get_date_column(reddit_df):
     reddit_df = reddit_df.drop(*columns_to_drop)
     return reddit_df
 
-def write_to_database(reddit_df):
-    reddit_df.write\
-    .format("org.apache.spark.sql.cassandra")\
-    .mode('append')\
-    .options(table="test", keyspace="word")\
-    .save()
+#def write_to_database(reddit_df):
     
+    .saveToCassandra("events", "topicuser")
+    
+#    reddit_df.write\
+#    .format("org.apache.spark.sql.cassandra")\
+#    .mode('append')\
+#    .options(table="test", keyspace="word")\
+#    .save()
+#    
 #    url = "jdbc:postgresql://10.0.0.8:5431/word"
 #    properties = {
 #        "user": "jh",
@@ -216,5 +223,7 @@ if __name__ == "__main__":
     reddit_df = get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df)
     reddit_df = get_change_in_rolling_average_per_day(reddit_df)
     reddit_df = get_date_column(reddit_df) 
-    write_to_database(reddit_df)
+    reddit_df.saveToCassandra("word", "test")
+    #write_to_database(reddit_df)
+    
 
