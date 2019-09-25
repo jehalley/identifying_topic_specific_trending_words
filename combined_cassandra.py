@@ -184,7 +184,7 @@ def get_date_column(reddit_df):
 def write_to_database(reddit_df):
     reddit_df.write\
     .format("org.apache.spark.sql.cassandra")\
-    .mode('create')\
+    .mode('append')\
     .options(table="test", keyspace="word")\
     .save()
     
