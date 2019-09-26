@@ -13,7 +13,7 @@ from cassandra.cluster import Cluster
 
 
 #create cassandra cluster
-cluster = Cluster(["18.237.123.36" , "54.186.42.143", "35.163.172.255" ])
+cluster = Cluster(["10.0.0.4" , "10.0.0.25", "10.0.0.2" ])
 
 session = cluster.connect()
 
