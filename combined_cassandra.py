@@ -10,10 +10,10 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, col, window, broadcast, lower, explode, split, col, avg, sum, lag, to_date
 from pyspark.sql.window import Window
 from cassandra.cluster import Cluster
-import pyspark_cassandra
+#import pyspark_cassandra
 
 #create cassandra cluster
-cluster = Cluster(["18.236.219.153" , "54.190.116.213", "34.212.36.241" ])
+cluster = Cluster(["18.237.123.36" , "54.186.42.143", "35.163.172.255" ])
 
 ### spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3 --packages anguenot/pyspark-cassandra:0.9.0,com.databricks:spark-csv_2.10:1.2.0 --conf spark.cassandra.connection.host=18.236.219.153,54.190.116.213,34.212.36.241 --conf spark.akka.frameSize=1028 --py-files v0.7.0.zip --executor-memory 6g  --driver-memory 6g combined_cassandra.py
 
@@ -187,16 +187,13 @@ def get_date_column(reddit_df):
     reddit_df = reddit_df.drop(*columns_to_drop)
     return reddit_df
 
-#def write_to_database(reddit_df):
+def write_to_database(reddit_df):
+    reddit_df.write\
+    .format("org.apache.spark.sql.cassandra")\
+    .mode('append')\
+    .options(table="test", keyspace="word")\
+    .save()
     
-   # .saveToCassandra("events", "topicuser")
-    
-#    reddit_df.write\
-#    .format("org.apache.spark.sql.cassandra")\
-#    .mode('append')\
-#    .options(table="test", keyspace="word")\
-#    .save()
-#    
 #    url = "jdbc:postgresql://10.0.0.8:5431/word"
 #    properties = {
 #        "user": "jh",
@@ -225,8 +222,10 @@ if __name__ == "__main__":
     reddit_df = get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df)
     reddit_df = get_change_in_rolling_average_per_day(reddit_df)
     reddit_df = get_date_column(reddit_df) 
-    reddit_rdd = reddit_df.rdd.map(tuple)
-    reddit_df.saveToCassandra("word", "test")
+    write_to_database(reddit_df)
+    
+    #reddit_rdd = reddit_df.rdd.map(tuple)
+    #reddit_df.saveToCassandra("word", "test")
     #write_to_database(reddit_df)
     
 

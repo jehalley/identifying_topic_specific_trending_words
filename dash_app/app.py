@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Sep 21 20:52:37 2019
-
 @author: JeffHalley
 """
 import ast
@@ -71,8 +70,8 @@ app.layout = html.Div([
         id='my-date-picker-range',
         min_date_allowed=dt(2006, 12, 12),
         max_date_allowed=dt(2017, 12, 31 ),
-        initial_visible_month=dt(2013, 1, 1),
-        start_date = dt(2010, 1, 1),
+        #initial_visible_month=dt(2013, 1, 1),
+        start_date = dt(2016, 1, 1),
         end_date=dt(2017, 1, 1)
     ),
     html.Div(id='output-container-date-picker-range'),
@@ -187,5 +186,4 @@ def update_graph(jsonified_query_data):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
-    
+    app.run_server(debug=False)

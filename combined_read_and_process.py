@@ -213,3 +213,5 @@ if __name__ == "__main__":
     reddit_df = get_date_column(reddit_df) 
     write_to_database(reddit_df)
 
+#spark submit:
+#nohup: spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3,  --packages org.postgresql:postgresql:42.2.5 --conf spark.akka.frameSize=1028 --executor-memory 6g  --driver-memory 6g combined_read_and_process.py
