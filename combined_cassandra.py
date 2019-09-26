@@ -193,7 +193,7 @@ def write_to_database(reddit_df):
     reddit_df.write\
     .format("org.apache.spark.sql.cassandra")\
     .mode('append')\
-    .options(table="test", keyspace="word")\
+    .options(table="test2_no_existing_table", keyspace="word")\
     .save()
     
 #    url = "jdbc:postgresql://10.0.0.8:5431/word"
@@ -231,5 +231,4 @@ if __name__ == "__main__":
     #write_to_database(reddit_df)
 
 #spark submit
-# spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3 --packages anguenot/pyspark-cassandra:0.9.0,com.databricks:spark-csv_2.10:1.2.0 --conf spark.cassandra.connection.host=18.237.123.36,54.186.42.143,35.163.172.255 --conf spark.akka.frameSize=1028 --executor-memory 6g  --driver-memory 6g 
-
+# spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3 --conf spark.cassandra.connection.host=10.0.0.4,10.0.0.25,10.0.0.2 --packages datastax:spark-cassandra-connector:2.4.0-s_2.11 --conf spark.akka.frameSize=1028 --py-files v0.7.0.zip --executor-memory 6g  --driver-memory 6g combined_cassandra.py
