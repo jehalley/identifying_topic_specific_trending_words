@@ -190,10 +190,19 @@ def get_date_column(reddit_df):
     return reddit_df
 
 def write_to_database(reddit_df):
+    #make schema match with database
+    reddit_df = reddit_df.withColumn('total_word_count_per_day_topic', col('total_word_count_per_day_topic').cast('float'))
+    reddit_df = reddit_df.withColumn('total_word_count_per_day_all', col('total_word_count_per_day_all').cast('float'))
+    reddit_df = reddit_df.withColumn('total_word_count_per_day_topic', col('total_word_count_per_day_topic').cast('float'))
+    reddit_df = reddit_df.withColumn('count', col('count').cast('float'))
+    reddit_df = reddit_df.withColumn('count_per_day_all', col('count_per_day_all').cast('float'))
+    reddit_df = reddit_df.withColumn('date', col('count_per_day_all').cast('timestamp'))
+
+    
     reddit_df.write\
     .format("org.apache.spark.sql.cassandra")\
     .mode('append')\
-    .options(table="test2_no_existing_table", keyspace="word")\
+    .options(table="test3", keyspace="word")\
     .save()
     
 #    url = "jdbc:postgresql://10.0.0.8:5431/word"
