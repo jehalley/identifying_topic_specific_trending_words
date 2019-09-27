@@ -188,7 +188,7 @@ def write_to_database(reddit_df):
         "password": "jh",
         "driver": "org.postgresql.Driver"
     }
-    reddit_df.write.jdbc(url=url, table="reddit_results_9_26", mode= "append", properties=properties)
+    reddit_df.write.jdbc(url=url, table="reddit_results_9_26_b", mode= "append", properties=properties)
         
     
 if __name__ == "__main__":
