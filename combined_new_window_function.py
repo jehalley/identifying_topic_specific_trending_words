@@ -117,9 +117,9 @@ def get_tokenized_df(reddit_df):
     #reddit_df = reddit_df.orderBy(['word','day_window'],ascending=False) 
     return reddit_df
 
-def get_partitioned_df(reddit_df):
-    reddit_df = reddit_df.repartition("topic","word", "day_window")
-    return reddit_df
+#def get_partitioned_df(reddit_df):
+#    reddit_df = reddit_df.repartition("topic","word", "day_window")
+#    return reddit_df
 
 def get_word_counts(reddit_df):                              
     #split comment body into indivdidual words at any nonword character, group by subreddit and day window 
@@ -173,7 +173,7 @@ def get_change_in_rolling_average_per_day(reddit_df):
     #windowSpec = Window.orderBy(reddit_df['day_window'])
     windowSpec = \
      Window \
-     .partitionBy(reddit_df['topic'],reddit_df['month_window'] )\
+     .partitionBy(reddit_df['topic'])\
      .orderBy(reddit_df['day_window'])
     
     reddit_df = reddit_df.withColumn('prev_day_rolling_average',
@@ -213,7 +213,7 @@ if __name__ == "__main__":
     subreddit_topics = get_subreddit_topics_df(subreddit_topics_csv)
     reddit_df = get_subreddit_topics_column(reddit_df,subreddit_topics)
     reddit_df = get_tokenized_df(reddit_df)
-    reddit_df = get_partitioned_df(reddit_df)
+    #reddit_df = get_partitioned_df(reddit_df)
     reddit_df = get_word_counts(reddit_df)
     reddit_df = get_word_counts_for_combined(reddit_df)
     reddit_df = get_total_word_count_per_day_all(reddit_df)
