@@ -75,6 +75,17 @@ def get_date_time_window_column(reddit_df):
          windowDuration= '1 day'
     ).cast("struct<start:string,end:string>")
     )
+    reddit_df = reddit_df.withColumn('date_time', from_unixtime('author_created_utc'))
+    #bin comments to 1 day windows and make new column saving the window
+    
+    #get 1 month window
+    reddit_df = reddit_df.withColumn(
+    'month_window',
+    window(
+         col('date_time'), 
+         windowDuration= '30 day'
+    ).cast("struct<start:string,end:string>")
+    )
     return reddit_df
 
 
@@ -114,7 +125,7 @@ def get_word_counts(reddit_df):
     #split comment body into indivdidual words at any nonword character, group by subreddit and day window 
     #reddit_df = reddit_df.orderBy(['word','day_window'],ascending=False)
     reddit_df = reddit_df\
-    .groupBy('topic','day_window','word','date_time')\
+    .groupBy('topic','day_window', 'month_window','word','date_time')\
     .count()
     return reddit_df
 
@@ -162,8 +173,9 @@ def get_change_in_rolling_average_per_day(reddit_df):
     #windowSpec = Window.orderBy(reddit_df['day_window'])
     windowSpec = \
      Window \
-     .partitionBy(reddit_df['topic'])\
+     .partitionBy(reddit_df['topic'],reddit_df['month_window'] )\
      .orderBy(reddit_df['day_window'])
+    
     reddit_df = reddit_df.withColumn('prev_day_rolling_average',
                                     lag(reddit_df['rolling_average'])
                                     .over(windowSpec))
@@ -177,7 +189,7 @@ def get_date_column(reddit_df):
     #get just date
     reddit_df = reddit_df.withColumn("date", to_date(col("date_time")))
     #remove uneeded columns
-    columns_to_drop = ["day_window","date_time"]
+    columns_to_drop = ["day_window","month_window","date_time"]
     reddit_df = reddit_df.drop(*columns_to_drop)
     return reddit_df
 

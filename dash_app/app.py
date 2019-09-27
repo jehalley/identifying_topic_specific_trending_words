@@ -22,11 +22,15 @@ end_date_string = "2017-01-01"
 
 connection = psycopg2.connect(host='18.237.35.222', port=5431, user='jh', password='jh', dbname='word')
 #query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio  FROM reddit_results WHERE topic = 'Basketball' AND '[2016-01-01, 2017-01-01]'::daterange @> date ORDER BY sub_freq_to_all_freq_ratio  DESC LIMIT 10;"
-query = "SELECT topic, date, word, count,sub_freq_to_all_freq_ratio, rolling_average FROM reddit_results WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY rolling_average DESC;"
+query = "SELECT topic, date, word, count,sub_freq_to_all_freq_ratio, change_in_rolling_average FROM reddit_results_9_26 WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_rolling_average DESC;"
 cursor = connection.cursor()
 cursor.execute(query)
 data = cursor.fetchall()
-query_data = pd.DataFrame(data = data, columns=['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio','rolling_average'])
+query_data = pd.DataFrame(data = data, columns=['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio','change_in_rolling_average'])
+average_adj_freq = pd.DataFrame(query_data.groupby('word')['sub_freq_to_all_freq_ratio'].mean())
+top_percentile_words = average_adj_freq[average_adj_freq.sub_freq_to_all_freq_ratio > average_adj_freq.sub_freq_to_all_freq_ratio.quantile(.50)]
+query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
+query_data = query_data.sort_values('change_in_rolling_average', ascending=False)
 df = query_data.head(10)
 
 #this will be applied to the list of subreddits explained below
@@ -160,13 +164,18 @@ def get_date_range(start_date, end_date):
      dash.dependencies.Output('query_results', 'children')],
     [dash.dependencies.Input('topic_from_pulldown', 'children'),
      dash.dependencies.Input('chosen_date_range_string', 'children')])
-def update_ui(topic, date_range):
+def update_table(topic, date_range):
     #global topic
-    query = "SELECT topic, date, word, count,sub_freq_to_all_freq_ratio, rolling_average FROM reddit_results WHERE topic = '" + topic + "' AND '[" + date_range + "]'::daterange @> date ORDER BY rolling_average;"
+    query = "SELECT topic, date, word, count,sub_freq_to_all_freq_ratio, change_in_rolling_average FROM reddit_results_9_26 WHERE topic = '" + topic + "' AND '[" + date_range + "]'::daterange @> date ORDER BY change_in_rolling_average;"
     cursor = connection.cursor()
     cursor.execute(query)
     data = cursor.fetchall()
-    query_data = pd.DataFrame(data = data, columns=['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio','rolling_average'])
+    query_data = pd.DataFrame(data = data, columns=['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio','change_in_rolling_average'])
+    average_adj_freq = pd.DataFrame(query_data.groupby('word')['sub_freq_to_all_freq_ratio'].mean())
+    top_percentile_words = average_adj_freq[average_adj_freq.sub_freq_to_all_freq_ratio > average_adj_freq.sub_freq_to_all_freq_ratio.quantile(.50)]
+    query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
+    query_data = query_data.sort_values('change_in_rolling_average', ascending=False)
+    #query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
     df = query_data.head(10)
     data=df.to_dict('records')
     return data, query_data.to_json(date_format='iso', orient='split')
@@ -175,6 +184,7 @@ def update_ui(topic, date_range):
 def update_graph(jsonified_query_data):
     # json.loads(jsonified_cleaned_data)
     query_data = pd.read_json(jsonified_query_data, orient='split')
+    
     df = query_data.head(10)
     words = df.word.unique().tolist()
     fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=True,vertical_spacing=0.009,horizontal_spacing=0.009)
