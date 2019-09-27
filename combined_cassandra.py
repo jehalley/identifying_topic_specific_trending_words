@@ -202,7 +202,7 @@ def write_to_database(reddit_df):
     reddit_df.write\
     .format("org.apache.spark.sql.cassandra")\
     .mode('append')\
-    .options(table="test", keyspace="word")\
+    .options(table="reddit_results", keyspace="word")\
     .save()
     
 #    url = "jdbc:postgresql://10.0.0.8:5431/word"
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
     subreddit_topics_csv = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics/subreddit_topics.csv'
     reddit_df = get_reddit_df(reddit_directory_path)
-    reddit_df = drop_irrelevant_columns(reddit_df)
+    #reddit_df = drop_irrelevant_columns(reddit_df)
     reddit_df = get_date_time_window_column(reddit_df)
     subreddit_topics = get_subreddit_topics_df(subreddit_topics_csv)
     reddit_df = get_subreddit_topics_column(reddit_df,subreddit_topics)
