@@ -9,7 +9,15 @@ Created on Tue Sep 24 13:55:37 2019
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, col, window, broadcast, lower, explode, split, col, avg, sum, lag, to_date
 from pyspark.sql.window import Window
+from cassandra.cluster import Cluster
 
+
+#create cassandra cluster
+cluster = Cluster(["10.0.0.4" , "10.0.0.25", "10.0.0.2" ])
+
+session = cluster.connect()
+
+### spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3 --packages anguenot/pyspark-cassandra:0.9.0,com.databricks:spark-csv_2.10:1.2.0 --conf spark.cassandra.connection.host=18.236.219.153,54.190.116.213,34.212.36.241 --conf spark.akka.frameSize=1028 --py-files v0.7.0.zip --executor-memory 6g  --driver-memory 6g combined_cassandra.py
 
 def start_spark_session():
     spark = SparkSession \
@@ -103,7 +111,8 @@ def get_tokenized_df(reddit_df):
     #duplicates dropped to ignore cases of someone using a word in the same post
     reddit_df = reddit_df.dropDuplicates()
     #order data in attempt to avoid request error
-    #reddit_df = reddit_df.orderBy(['word','day_window'],ascending=False) 
+    #reddit_df = reddit_df.orderBy(['word','day_window'],ascending=False)
+    
     return reddit_df
 
 def get_partitioned_df(reddit_df):
@@ -111,42 +120,32 @@ def get_partitioned_df(reddit_df):
     return reddit_df
 
 def get_word_counts(reddit_df):                              
-    #split comment body into indivdidual words at any nonword character, group by subreddit and day window 
-    #reddit_df = reddit_df.orderBy(['word','day_window'],ascending=False)
+    #get word counts for topics
     reddit_df = reddit_df\
     .groupBy('topic','day_window','word','date_time')\
     .count()
-    return reddit_df
-
-
-def get_word_counts_for_combined(reddit_df):   
+    
+    #combined counts
     reddit_total_wc = reddit_df.groupby('word','day_window').sum()
     reddit_total_wc = reddit_total_wc.withColumnRenamed("sum(count)","count_per_day_all")
     reddit_df = reddit_df.join(reddit_total_wc, on = ['word','day_window'], how = 'left_outer')
-    return reddit_df
-
-
-def get_total_word_count_per_day_all(reddit_df):
+    
+    #get total word count
     word_count_sum = reddit_df.groupBy('day_window').agg(sum('count'))
     word_count_sum = word_count_sum.withColumnRenamed("sum(count)","total_word_count_per_day_all")
     reddit_df = reddit_df.join(word_count_sum, on = ['day_window'], how = 'left_outer')
-    return reddit_df
-
-
-def get_total_word_count_per_day_topic(reddit_df):
+    
+    #get_total_word_count_per_day_topic
     topic_count_sum = reddit_df.groupBy('day_window','topic').agg(sum('count'))
     topic_count_sum = topic_count_sum.withColumnRenamed("sum(count)","total_word_count_per_day_topic")
     reddit_df = reddit_df.join(topic_count_sum, on = ['day_window','topic'], how = 'left_outer')
-    return reddit_df
-
-
-def get_sub_freq_to_all_freq_ratio(reddit_df):
-    #make sub_freq to all_freq ratio
+    
+    #get_sub_freq_to_all_freq_ratio
     reddit_df = reddit_df.withColumn("sub_freq_to_all_freq_ratio", 
                          ((col("count")/col("total_word_count_per_day_topic"))/
                           (col("count_per_day_all")/col("total_word_count_per_day_all"))))
+    
     return reddit_df
-
 
 def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
     days = lambda i: i * 86400
@@ -154,6 +153,7 @@ def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
     w = (Window.orderBy(col('timestamp').cast('long')).rangeBetween(-days(2), 0))
     reddit_df = reddit_df.withColumn('rolling_average', avg("sub_freq_to_all_freq_ratio").over(w))
     reddit_df = reddit_df.drop('timestamp')
+    
     return reddit_df
 
 
@@ -182,18 +182,33 @@ def get_date_column(reddit_df):
     return reddit_df
 
 def write_to_database(reddit_df):
-    url = "jdbc:postgresql://10.0.0.8:5431/word"
-    properties = {
-        "user": "jh",
-        "password": "jh",
-        "driver": "org.postgresql.Driver"
-    }
-    reddit_df.write.jdbc(url=url, table="reddit_results_9_26", mode= "append", properties=properties)
-        
+    #make schema match with database
+#    reddit_df = reddit_df.withColumn('total_word_count_per_day_topic', col('total_word_count_per_day_topic').cast('float'))
+#    reddit_df = reddit_df.withColumn('total_word_count_per_day_all', col('total_word_count_per_day_all').cast('float'))
+#    reddit_df = reddit_df.withColumn('total_word_count_per_day_topic', col('total_word_count_per_day_topic').cast('float'))
+#    reddit_df = reddit_df.withColumn('count', col('count').cast('float'))
+#    reddit_df = reddit_df.withColumn('count_per_day_all', col('count_per_day_all').cast('float'))
+#    reddit_df = reddit_df.withColumn('date', col('count_per_day_all').cast('timestamp'))
+#
+#    
+    reddit_df.write\
+    .format("org.apache.spark.sql.cassandra")\
+    .mode('append')\
+    .options(table="reddit_results_date_as_clustering", keyspace="word")\
+    .save()
+    
+#    url = "jdbc:postgresql://10.0.0.8:5431/word"
+#    properties = {
+#        "user": "jh",
+#        "password": "jh",
+#        "driver": "org.postgresql.Driver"
+#    }
+#    reddit_df.write.jdbc(url=url, table="reddit_results_9_24", mode= "append", properties=properties)
+    
     
 if __name__ == "__main__":
     spark = start_spark_session()
-    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/'
+    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
     subreddit_topics_csv = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics/subreddit_topics.csv'
     reddit_df = get_reddit_df(reddit_directory_path)
     reddit_df = drop_irrelevant_columns(reddit_df)
@@ -211,6 +226,36 @@ if __name__ == "__main__":
     reddit_df = get_change_in_rolling_average_per_day(reddit_df)
     reddit_df = get_date_column(reddit_df) 
     write_to_database(reddit_df)
+    
+    #reddit_rdd = reddit_df.rdd.map(tuple)
+    #reddit_df.saveToCassandra("word", "test")
+    #write_to_database(reddit_df)
 
-#spark submit:
-#nohup: spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3,  --packages org.postgresql:postgresql:42.2.5 --conf spark.akka.frameSize=1028 --executor-memory 6g  --driver-memory 6g combined_read_and_process.py
+#spark submit
+# spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3 --conf spark.cassandra.connection.host=10.0.0.4,10.0.0.25,10.0.0.2 --packages datastax:spark-cassandra-connector:2.4.0-s_2.11 --conf spark.akka.frameSize=1028 --py-files v0.7.0.zip --executor-memory 6g  --driver-memory 6g combined_cassandra.py
+    
+#CREATE TABLE word.reddit_results (
+#   ...     topic text,
+#   ...     word text,
+#   ...     date date,
+#   ...     change_in_rolling_average double,
+#   ...     count bigint,
+#   ...     count_per_day_all bigint,
+#   ...     rolling_average double,
+#   ...     sub_freq_to_all_freq_ratio double,
+#   ...     total_word_count_per_day_all bigint,
+#   ...     total_word_count_per_day_topic bigint,
+#   ...     PRIMARY KEY ((topic, date), word, change_in_rolling_average));
+    
+#CREATE TABLE word.reddit_results_date_as_clustering(
+#      topic text,
+#      word text,
+#       date date,
+#       change_in_rolling_average double,
+#        count bigint,
+#        count_per_day_all bigint,
+#       rolling_average double,
+#       sub_freq_to_all_freq_ratio double,
+#       total_word_count_per_day_all bigint,
+#        total_word_count_per_day_topic bigint,
+#       PRIMARY KEY ((topic), date, word, change_in_rolling_average));
