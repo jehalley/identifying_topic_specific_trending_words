@@ -124,27 +124,31 @@ def get_word_counts(reddit_df):
     reddit_df = reddit_df\
     .groupBy('topic',"month_window",'day_window','word','date_time')\
     .count()
+    reddit_df = reddit_df.cache()
     return reddit_df
 
 
 def get_word_counts_for_combined(reddit_df):   
-    reddit_total_wc = reddit_df.groupby('word','day_window').sum()
+    reddit_total_wc = reddit_df.groupby('word','month_window','day_window').sum()
     reddit_total_wc = reddit_total_wc.withColumnRenamed("sum(count)","count_per_day_all")
-    reddit_df = reddit_df.join(reddit_total_wc, on = ['word','day_window'], how = 'left_outer')
+    reddit_total_wc = reddit_total_wc.repartition(32832,["month_window","word"])
+    reddit_df = reddit_df.join(reddit_total_wc, on = ['word','day_window', 'month_window'], how = 'left_outer')
     return reddit_df
 
 
 def get_total_word_count_per_day_all(reddit_df):
-    word_count_sum = reddit_df.groupBy('day_window').agg(sum('count'))
+    word_count_sum = reddit_df.groupBy('day_window','month_window').agg(sum('count'))
     word_count_sum = word_count_sum.withColumnRenamed("sum(count)","total_word_count_per_day_all")
-    reddit_df = reddit_df.join(word_count_sum, on = ['day_window'], how = 'left_outer')
+    word_count_sum = word_count_sum.repartition(32832,["month_window",'day_window'])
+    reddit_df = reddit_df.join(word_count_sum, on = ['day_window', 'month_window'], how = 'left_outer')
     return reddit_df
 
 
 def get_total_word_count_per_day_topic(reddit_df):
-    topic_count_sum = reddit_df.groupBy('day_window','topic').agg(sum('count'))
+    topic_count_sum = reddit_df.groupBy('day_window', 'month_window','topic').agg(sum('count'))
     topic_count_sum = topic_count_sum.withColumnRenamed("sum(count)","total_word_count_per_day_topic")
-    reddit_df = reddit_df.join(topic_count_sum, on = ['day_window','topic'], how = 'left_outer')
+    topic_count_sum = topic_count_sum.repartition(32832,["month_window","topic"])
+    reddit_df = reddit_df.join(topic_count_sum, on = ['day_window','month_window','topic'], how = 'left_outer')
     return reddit_df
 
 
@@ -157,8 +161,7 @@ def get_sub_freq_to_all_freq_ratio(reddit_df):
 
 
 def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
-    #reddit_df = reddit_df.repartition(32832,["topic","month_window"])
-    
+    reddit_df = reddit_df.repartition(32832,["topic","month_window"])
     days = lambda i: i * 86400
     reddit_df = reddit_df.withColumn('timestamp', reddit_df.date_time.cast('timestamp'))
     w = (Window.orderBy(col('timestamp').cast('long')).rangeBetween(-days(2), 0))
