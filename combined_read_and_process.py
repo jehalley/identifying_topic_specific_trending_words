@@ -208,7 +208,7 @@ def write_to_database(reddit_df):
 #    
     reddit_df.write \
     .format("jdbc") \
-    .option("url", "jdbc:postgresql://10.0.0.8:5431") \
+    .option("url", "jdbc:postgresql://10.0.0.8:5431/") \
     .option("dbtable", "word.reddit_results_9_28") \
     .option("mode", "overwrite") \
     .option("user", "jh") \
