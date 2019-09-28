@@ -107,7 +107,7 @@ def get_tokenized_df(reddit_df):
     return reddit_df
 
 def get_partitioned_df(reddit_df):
-    reddit_df = reddit_df.repartition("topic","word", "day_window")
+    reddit_df = reddit_df.repartition("topic","day_window")
     return reddit_df
 
 def get_word_counts(reddit_df):                              
