@@ -206,7 +206,7 @@ def write_to_database(reddit_df):
         "numPartitions": "32832",
         "batchsize": "10000"   
     }
-    reddit_df.write.jdbc(url=url, table="reddit_results_9_27", mode= "pverwrite", properties=properties)
+    reddit_df.write.jdbc(url=url, table="reddit_results_9_27", mode= "overwrite", properties=properties)
 #    
 #    reddit_df.write \
 #    .format("jdbc") \
