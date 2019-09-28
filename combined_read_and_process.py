@@ -102,6 +102,11 @@ def get_subreddit_topics_column(reddit_df,subreddit_topics):
 
 ### HERE IS WHERE IT SHOULD BE EXPORTED TO ELASTIC SEARCH
 
+def get_partitioned_df(reddit_df):
+    #partition by 13 years x 12 months and nearest multiple of number of cores (108)
+    reddit_df = reddit_df.repartition(32832,["topic","month_window"])
+    return reddit_df
+
 def get_tokenized_df(reddit_df):
     #make comments all lowercase
     reddit_df = reddit_df.withColumn('word', explode(split(col('body'), '[\W_]+')))
@@ -152,7 +157,7 @@ def get_sub_freq_to_all_freq_ratio(reddit_df):
 
 
 def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
-    reddit_df = reddit_df.repartition(32832,["topic","month_window"])
+    #reddit_df = reddit_df.repartition(32832,["topic","month_window"])
     
     days = lambda i: i * 86400
     reddit_df = reddit_df.withColumn('timestamp', reddit_df.date_time.cast('timestamp'))
@@ -166,7 +171,7 @@ def get_change_in_rolling_average_per_day(reddit_df):
     #make column with previous day adjusted frequency
     #windowSpec = Window.orderBy(reddit_df['day_window'])
     #partition by 13 years x 12 months and nearest multiple of number of cores (108)
-    reddit_df = reddit_df.repartition(32832,["topic","month_window"])
+    #reddit_df = reddit_df.repartition(32832,["topic","month_window"])
     
     windowSpec = \
      Window \
@@ -208,8 +213,8 @@ if __name__ == "__main__":
     reddit_df = get_date_time_window_column(reddit_df)
     subreddit_topics = get_subreddit_topics_df(subreddit_topics_csv)
     reddit_df = get_subreddit_topics_column(reddit_df,subreddit_topics)
+    reddit_df = get_partitioned_df(reddit_df)
     reddit_df = get_tokenized_df(reddit_df)
-    #reddit_df = get_partitioned_df(reddit_df)
     reddit_df = get_word_counts(reddit_df)
     reddit_df = get_word_counts_for_combined(reddit_df)
     reddit_df = get_total_word_count_per_day_all(reddit_df)
