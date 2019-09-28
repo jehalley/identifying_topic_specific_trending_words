@@ -75,6 +75,14 @@ def get_date_time_window_column(reddit_df):
          windowDuration= '1 day'
     ).cast("struct<start:string,end:string>")
     )
+    #get month windo
+    reddit_df = reddit_df.withColumn(
+    'month_window',
+    window(
+         col('date_time'), 
+         windowDuration= '30 day'
+    ).cast("struct<start:string,end:string>")
+    )
     return reddit_df
 
 
@@ -94,7 +102,6 @@ def get_subreddit_topics_column(reddit_df,subreddit_topics):
 
 ### HERE IS WHERE IT SHOULD BE EXPORTED TO ELASTIC SEARCH
 
-
 def get_tokenized_df(reddit_df):
     #make comments all lowercase
     reddit_df = reddit_df.withColumn('word', explode(split(col('body'), '[\W_]+')))
@@ -107,7 +114,8 @@ def get_tokenized_df(reddit_df):
     return reddit_df
 
 def get_partitioned_df(reddit_df):
-    reddit_df = reddit_df.repartition("topic","day_window")
+    #partition by 13 years x 12 months and nearest multiple of number of cores (108)
+    reddit_df = reddit_df.repartition(32832,["topic","month_window"])
     return reddit_df
 
 def get_word_counts(reddit_df):                              
