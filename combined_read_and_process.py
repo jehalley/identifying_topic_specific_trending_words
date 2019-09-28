@@ -185,7 +185,7 @@ def get_date_column(reddit_df):
     #get just date
     reddit_df = reddit_df.withColumn("date", to_date(col("date_time")))
     #remove uneeded columns
-    columns_to_drop = ["day_window","mont_window","date_time"]
+    columns_to_drop = ["day_window","month_window","date_time"]
     reddit_df = reddit_df.drop(*columns_to_drop)
     return reddit_df
 
