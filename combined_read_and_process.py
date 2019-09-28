@@ -210,10 +210,12 @@ def write_to_database(reddit_df):
     .format("jdbc") \
     .option("url", "jdbc:postgresql://10.0.0.8:5431") \
     .option("dbtable", "word.reddit_results_9_28") \
+    .option("mode", "overwrite") \
     .option("user", "jh") \
     .option("password", "jh") \
-    .option("numPartitions", 32832)\
-    .option("batchsize", 10000)\
+    .option("driver", "org.postgresql.Driver") \
+    .option("numPartitions", "32832") \
+    .option("batchsize", "10000") \
     .save()    
     
 if __name__ == "__main__":
