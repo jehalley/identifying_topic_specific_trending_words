@@ -198,23 +198,14 @@ def get_date_column(reddit_df):
     return reddit_df
 
 def write_to_database(reddit_df):
-#    url = "jdbc:postgresql://10.0.0.8:5431/word"
-#    properties = {
-#        "user": "jh",
-#        "password": "jh",
-#        "driver": "org.postgresql.Driver"
-#    }
-#    reddit_df.write.jdbc(url=url, table="reddit_results_9_27", mode= "append", properties=properties)
-#    
-    reddit_df.write \
-    .format("jdbc") \
-    .option("url", "jdbc:postgresql://10.0.0.8:5431") \
-    .option("dbtable", "word.reddit_results_9_28") \
-    .option("user", "jh") \
-    .option("password", "jh") \
-    .option("numPartitions", "32832")\
-    .option("batchsize", "10000")\
-    .save()    
+    url = "jdbc:postgresql://10.0.0.8:5431/word"
+    properties = {
+        "user": "jh",
+        "password": "jh",
+        "driver": "org.postgresql.Driver"
+    }
+    reddit_df.write.jdbc(url=url, table="reddit_results_9_27", mode= "append", properties=properties)
+        
     
 if __name__ == "__main__":
     spark = start_spark_session()
