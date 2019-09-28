@@ -212,7 +212,7 @@ def write_to_database(reddit_df):
     .option("dbtable", "word.reddit_results_9_28") \
     .option("user", "jh") \
     .option("password", "jh") \
-    .option("numPartitions", "32832")\
+    .option("numPartitions", 32832)\
     .option("batchsize", 10000)\
     .save()    
     
