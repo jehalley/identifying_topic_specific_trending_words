@@ -161,11 +161,14 @@ def get_sub_freq_to_all_freq_ratio(reddit_df):
 
 
 def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
-    reddit_df = reddit_df.repartition(32832,["topic","month_window"])
-    days = lambda i: i * 86400
     reddit_df = reddit_df.withColumn('timestamp', reddit_df.date_time.cast('timestamp'))
-    w = (Window.orderBy(col('timestamp').cast('long')).rangeBetween(-days(2), 0))
-    reddit_df = reddit_df.withColumn('rolling_average', avg("sub_freq_to_all_freq_ratio").over(w))
+    days = lambda i: i * 86400
+    windowSpec = \
+    Window \
+     .partitionBy(reddit_df['topic','word','month_window'])\
+     .col('timestamp').cast('long')\
+     .rangeBetween(-days(2), 0)
+    reddit_df = reddit_df.withColumn('rolling_average', avg("sub_freq_to_all_freq_ratio").over(windowSpec))
     reddit_df = reddit_df.drop('timestamp')
     return reddit_df
 
@@ -239,8 +242,8 @@ if __name__ == "__main__":
     reddit_df = get_sub_freq_to_all_freq_ratio(reddit_df)
     reddit_df = get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df)
     #reddit_df = get_change_in_rolling_average_per_day(reddit_df)
-    reddit_df = get_date_column(reddit_df) 
-    write_to_database(reddit_df)
+    #reddit_df = get_date_column(reddit_df) 
+    #write_to_database(reddit_df)
 
 #spark submit:
 #nohup: spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3,  --packages org.postgresql:postgresql:42.2.5 --conf spark.akka.frameSize=1028 --executor-memory 6g  --driver-memory 6g combined_read_and_process.py
