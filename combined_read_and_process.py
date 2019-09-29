@@ -207,7 +207,7 @@ def write_to_database(reddit_df):
         "numPartitions": "32832",
         "batchsize": "10000"   
     }
-    reddit_df.write.jdbc(url=url, table="reddit_results_9_27", mode= "overwrite", properties=properties)
+    reddit_df.write.jdbc(url=url, table="reddit_results_9_28", mode= "overwrite", properties=properties)
 #    
 #    reddit_df.write \
 #    .format("jdbc") \
@@ -223,7 +223,7 @@ def write_to_database(reddit_df):
     
 if __name__ == "__main__":
     spark = start_spark_session()
-    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/'
+    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
     subreddit_topics_csv = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics/subreddit_topics.csv'
     reddit_df = get_reddit_df(reddit_directory_path)
     reddit_df = drop_irrelevant_columns(reddit_df)
@@ -238,7 +238,7 @@ if __name__ == "__main__":
     reddit_df = get_total_word_count_per_day_topic(reddit_df)
     reddit_df = get_sub_freq_to_all_freq_ratio(reddit_df)
     reddit_df = get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df)
-    reddit_df = get_change_in_rolling_average_per_day(reddit_df)
+    #reddit_df = get_change_in_rolling_average_per_day(reddit_df)
     reddit_df = get_date_column(reddit_df) 
     write_to_database(reddit_df)
 
