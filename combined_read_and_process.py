@@ -210,7 +210,7 @@ def write_to_database(reddit_df):
         "user": "jh",
         "password": "jh",
         "driver": "org.postgresql.Driver",
-        "numPartitions": "32832",
+        "numPartitions": "100",
         "batchsize": "10000"   
     }
     reddit_df.write.jdbc(url=url, table="reddit_results_9_28", mode= "overwrite", properties=properties)
@@ -229,7 +229,7 @@ def write_to_database(reddit_df):
     
 if __name__ == "__main__":
     spark = start_spark_session()
-    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/'
+    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
     subreddit_topics_csv = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics/subreddit_topics.csv'
     reddit_df = get_reddit_df(reddit_directory_path)
     reddit_df = drop_irrelevant_columns(reddit_df)
@@ -249,4 +249,4 @@ if __name__ == "__main__":
     write_to_database(reddit_df)
 
 #spark submit:
-#nohup: spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3,  --packages org.postgresql:postgresql:42.2.5 --conf spark.akka.frameSize=1028 --executor-memory 6g  --driver-memory 6g combined_read_and_process.py
+#nohup spark-submit --master spark://10.0.0.16:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3, --packages org.postgresql:postgresql:42.2.5 --conf spark.akka.frameSize=1028 --executor-memory 4000M  --driver-memory 6g --conf spark.yarn.executor.memoryOverhead=2000 combined_read_and_process.py
