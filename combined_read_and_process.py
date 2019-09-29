@@ -163,12 +163,13 @@ def get_sub_freq_to_all_freq_ratio(reddit_df):
 def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
     reddit_df = reddit_df.withColumn('timestamp', reddit_df.date_time.cast('timestamp'))
     days = lambda i: i * 86400
+    
     windowSpec = \
     Window \
-     .partitionBy(reddit_df['topic'],reddit_df['word'],reddit_df['month_window'])\
+     .partitionBy(['topic','word'])\
      .orderBy(col('timestamp').cast('long'))\
-     .rangeBetween(-days(2), 0)
- 
+     .rangeBetween(-days(5), 0)
+     
     reddit_df = reddit_df.withColumn('rolling_average', avg("sub_freq_to_all_freq_ratio").over(windowSpec))
     reddit_df = reddit_df.drop('timestamp')
     return reddit_df
@@ -182,8 +183,9 @@ def get_change_in_rolling_average_per_day(reddit_df):
     
     windowSpec = \
      Window \
-     .partitionBy(reddit_df['topic'])\
+     .partitionBy(['topic','word'])\
      .orderBy(reddit_df['day_window'])
+     
     reddit_df = reddit_df.withColumn('prev_day_rolling_average',
                                     lag(reddit_df['rolling_average'])
                                     .over(windowSpec))
@@ -197,7 +199,7 @@ def get_date_column(reddit_df):
     #get just date
     reddit_df = reddit_df.withColumn("date", to_date(col("date_time")))
     #remove uneeded columns
-    columns_to_drop = ["day_window","month_window","date_time"]
+    columns_to_drop = ["day_window","date_time"]
     reddit_df = reddit_df.drop(*columns_to_drop)
     reddit_df = reddit_df.cache()
     return reddit_df
