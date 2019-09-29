@@ -165,9 +165,10 @@ def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
     days = lambda i: i * 86400
     windowSpec = \
     Window \
-     .partitionBy(reddit_df['topic','word','month_window'])\
-     .col('timestamp').cast('long')\
+     .partitionBy(reddit_df['topic'],reddit_df['word'],reddit_df['month_window'])\
+     .orderBy(col('timestamp').cast('long'))\
      .rangeBetween(-days(2), 0)
+ 
     reddit_df = reddit_df.withColumn('rolling_average', avg("sub_freq_to_all_freq_ratio").over(windowSpec))
     reddit_df = reddit_df.drop('timestamp')
     return reddit_df
