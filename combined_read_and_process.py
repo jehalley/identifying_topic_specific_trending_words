@@ -195,6 +195,7 @@ def get_date_column(reddit_df):
     #remove uneeded columns
     columns_to_drop = ["day_window","month_window","date_time"]
     reddit_df = reddit_df.drop(*columns_to_drop)
+    reddit_df = reddit_df.cache()
     return reddit_df
 
 def write_to_database(reddit_df):
