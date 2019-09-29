@@ -210,7 +210,7 @@ def write_to_database(reddit_df):
         "user": "jh",
         "password": "jh",
         "driver": "org.postgresql.Driver",
-        "numPartitions": "96",
+        "numPartitions": "90",
         "batchsize": "10000"   
     }
     reddit_df.write.jdbc(url=url, table="reddit_results_9_28", mode= "overwrite", properties=properties)
