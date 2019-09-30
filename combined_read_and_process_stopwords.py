@@ -6,11 +6,10 @@ Created on Tue Sep 24 13:55:37 2019
 @author: JeffHalley
 """
 
-from pyspark.ml.feature import Tokenizer, StopWordsRemover
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_unixtime, col, window, broadcast, lower, explode, split, avg, sum, lag, to_date
+from pyspark.sql.functions import from_unixtime, col, window, broadcast, lower, explode, split, col, avg, sum, lag, to_date
 from pyspark.sql.window import Window
-
+from pyspark.ml.feature import Tokenizer, StopWordsRemover
 
 def start_spark_session():
     spark = SparkSession \
@@ -109,20 +108,13 @@ def get_partitioned_df(reddit_df):
     return reddit_df
 
 def get_tokenized_df(reddit_df):
-    #split into individual words
-    tokenizer = Tokenizer(inputCol='body', outputCol='words_token')
-    reddit_df = tokenizer.transform(reddit_df).select('topic',"month_window",'day_window','date_time', 'words_token')
+    #make comments all lowercase
+    remover = StopWordsRemover(inputCol='body', outputCol='words_clean')
+    reddit_df = remover.transform(reddit_df).select('topic',"month_window",'day_window','word','date_time')
     
-    #remove stop words
-    remover = StopWordsRemover(inputCol='words_token', outputCol='words_no_stops')
-    reddit_df = remover.transform(reddit_df).select('topic',"month_window",'day_window','words_no_stops','date_time')
-    
-    #remove punctuation
-    reddit_df = reddit_df.withColumn('words_and_punct', explode('words_no_stops')).select('topic',"month_window",'day_window','words_and_punct','date_time')
-    reddit_df = reddit_df.withColumn('word', explode(split(col('words_and_punct'), '[\W_]+'))).select('topic',"month_window",'day_window','word','date_time')
+    reddit_df = reddit_df.withColumn('word', explode(split(col('body'), '[\W_]+')))
     reddit_df = reddit_df.withColumn('word', lower(col('word')))
     reddit_df = reddit_df.filter( reddit_df['word'].rlike('[a-zA-Z]'))
-    
     #duplicates dropped to ignore cases of someone using a word in the same post
     reddit_df = reddit_df.dropDuplicates()
     
