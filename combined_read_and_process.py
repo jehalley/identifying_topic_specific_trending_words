@@ -207,26 +207,21 @@ def get_date_column(reddit_df):
 def write_to_database(reddit_df):
     #reddit_df = reddit_df.repartition(200)
     url = "jdbc:postgresql://10.0.0.8:5431/word"
+#    properties = {
+#        "user": "jh",
+#        "password": "jh",
+#        "driver": "org.postgresql.Driver",
+#        "numPartitions": "200",
+#        "batchsize": "10000"   
+#    }
     properties = {
         "user": "jh",
         "password": "jh",
         "driver": "org.postgresql.Driver",
-        #"numPartitions": "200",
         "batchsize": "10000"   
     }
     reddit_df.write.jdbc(url=url, table="reddit_results_9_29", mode= "overwrite", properties=properties)
-#    
-#    reddit_df.write \
-#    .format("jdbc") \
-#    .option("url", "jdbc:postgresql://10.0.0.8:5431/") \
-#    .option("dbtable", "word.reddit_results_9_28") \
-#    .option("mode", "overwrite") \
-#    .option("user", "jh") \
-#    .option("password", "jh") \
-#    .option("driver", "org.postgresql.Driver") \
-#    .option("numPartitions", "32832") \
-#    .option("batchsize", "10000") \
-#    .save()    
+   
     
 if __name__ == "__main__":
     spark = start_spark_session()
