@@ -68,6 +68,7 @@ def drop_irrelevant_columns(reddit_df):
 def get_date_time_window_column(reddit_df):  
     #convert created at utc to string date and make new column
     reddit_df = reddit_df.withColumn('date_time', from_unixtime('author_created_utc'))
+    
     #bin comments to 1 day windows and make new column saving the window
     reddit_df = reddit_df.withColumn(
     'day_window',
@@ -94,9 +95,12 @@ def get_subreddit_topics_df(subreddit_topics_csv):
 
 
 def get_subreddit_topics_column(reddit_df,subreddit_topics):
+    #insert topic column into reddit_df
     reddit_df = reddit_df.join(broadcast(subreddit_topics), on = 'subreddit', how = 'left_outer')
+    
     #clean dataframe
     reddit_df = reddit_df.filter(reddit_df.topic. isNotNull())
+    
     #for topics with multiple topics split into single topics
     reddit_df = reddit_df.withColumn('topic', explode(split(col('topic'), ',')))
     return reddit_df
@@ -125,7 +129,6 @@ def get_tokenized_df(reddit_df):
     
     #duplicates dropped to ignore cases of someone using a word in the same post
     reddit_df = reddit_df.dropDuplicates()
-    
     return reddit_df
 
 def get_word_counts(reddit_df):                              
@@ -187,10 +190,6 @@ def get_rolling_average_of_sub_freq_to_all_freq_ratio(reddit_df):
 
 def get_change_in_rolling_average_per_day(reddit_df):
     #make column with previous day adjusted frequency
-    #windowSpec = Window.orderBy(reddit_df['day_window'])
-    #partition by 13 years x 12 months and nearest multiple of number of cores (108)
-    #reddit_df = reddit_df.repartition(32832,["topic","month_window"])
-    
     windowSpec = \
      Window \
      .partitionBy(['topic','word'])\
@@ -208,6 +207,7 @@ def get_change_in_rolling_average_per_day(reddit_df):
 def get_date_column(reddit_df):
     #get just date
     reddit_df = reddit_df.withColumn("date", to_date(col("date_time")))
+    
     #remove uneeded columns
     columns_to_drop = ["day_window","date_time","month_window"]
     reddit_df = reddit_df.drop(*columns_to_drop)
@@ -215,15 +215,7 @@ def get_date_column(reddit_df):
     return reddit_df
 
 def write_to_database(reddit_df):
-    #reddit_df = reddit_df.repartition(200)
     url = "jdbc:postgresql://10.0.0.8:5431/word"
-#    properties = {
-#        "user": "jh",
-#        "password": "jh",
-#        "driver": "org.postgresql.Driver",
-#        "numPartitions": "200",
-#        "batchsize": "10000"   
-#    }
     properties = {
         "user": "jh",
         "password": "jh",
