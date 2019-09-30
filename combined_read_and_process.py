@@ -205,13 +205,13 @@ def get_date_column(reddit_df):
     return reddit_df
 
 def write_to_database(reddit_df):
-    reddit_df = reddit_df.repartition(54)
+    reddit_df = reddit_df.repartition(90)
     url = "jdbc:postgresql://10.0.0.8:5431/word"
     properties = {
         "user": "jh",
         "password": "jh",
         "driver": "org.postgresql.Driver",
-        "numPartitions": "54",
+        "numPartitions": "90",
         "batchsize": "10000"   
     }
     reddit_df.write.jdbc(url=url, table="reddit_results_9_29", mode= "overwrite", properties=properties)
