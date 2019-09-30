@@ -201,19 +201,20 @@ def get_date_column(reddit_df):
     #remove uneeded columns
     columns_to_drop = ["day_window","date_time","month_window"]
     reddit_df = reddit_df.drop(*columns_to_drop)
-    reddit_df = reddit_df.cache()
+    #reddit_df = reddit_df.cache()
     return reddit_df
 
 def write_to_database(reddit_df):
+    reddit_df = reddit_df.repartition(54)
     url = "jdbc:postgresql://10.0.0.8:5431/word"
     properties = {
         "user": "jh",
         "password": "jh",
         "driver": "org.postgresql.Driver",
-        "numPartitions": "90",
+        "numPartitions": "54",
         "batchsize": "10000"   
     }
-    reddit_df.write.jdbc(url=url, table="reddit_results_9_28", mode= "overwrite", properties=properties)
+    reddit_df.write.jdbc(url=url, table="reddit_results_9_29", mode= "overwrite", properties=properties)
 #    
 #    reddit_df.write \
 #    .format("jdbc") \
