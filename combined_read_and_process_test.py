@@ -222,7 +222,7 @@ def write_to_database(reddit_df):
         "driver": "org.postgresql.Driver",
         "batchsize": "10000"   
     }
-    reddit_df.write.jdbc(url=url, table="reddit_results_9_29", mode= "overwrite", properties=properties)
+    reddit_df.write.jdbc(url=url, table="reddit_results_test", mode= "overwrite", properties=properties)
    
     
 if __name__ == "__main__":
