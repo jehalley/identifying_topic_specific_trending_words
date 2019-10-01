@@ -152,7 +152,7 @@ def get_word_counts_for_combined(reddit_df):
 def get_total_word_count_per_day_all(reddit_df):
     word_count_sum = reddit_df.groupBy('day_window','month_window').agg(sum('count'))
     word_count_sum = word_count_sum.withColumnRenamed("sum(count)","total_word_count_per_day_all")
-    word_count_sum = word_count_sum.repartition([200,"month_window",'day_window'])
+    word_count_sum = word_count_sum.repartition(200,["month_window",'day_window'])
     reddit_df = reddit_df.join(word_count_sum, on = ['day_window', 'month_window'], how = 'left_outer')
     return reddit_df
 
