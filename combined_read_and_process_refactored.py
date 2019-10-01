@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Sep 24 13:55:37 2019
+
 @author: JeffHalley
 """
 
@@ -25,18 +26,18 @@ def get_reddit_df(directory_path):
     return reddit_df
 
 def select_relevant_columns(reddit_df):
-    reddit_df = reddit_df.select('created_utc','body','permalink','score','subreddit')
+    selected_df = reddit_df.select('created_utc','body','permalink','score','subreddit')
     return reddit_df
 
-def get_date_columns(reddit_df):  
+def get_date_columns(selected_df):  
     #Some of these dates might seem redundant but postgres takes a regular date
     #and many spark functions seem to just work with date_time structs
     
     #convert created at utc to string date and make new column
-    reddit_df = reddit_df.withColumn('date_time', from_unixtime('created_utc'))
+    selected_df_with_dates = selected_df.withColumn('date_time', from_unixtime('created_utc'))
     
     #bin comments to 1 day windows and make new column saving the window
-    reddit_df = reddit_df.withColumn(
+    selected_df_with_dates = selected_df_with_dates.withColumn(
     'day_window',
     window(
          col('date_time'), 
@@ -45,25 +46,25 @@ def get_date_columns(reddit_df):
     )
     
     #get week window
-    reddit_df = reddit_df.withColumn(
+    selected_df_with_dates = selected_df_with_dates.withColumn(
     'week_window',
     window(
          col('date_time'), 
          windowDuration= '7 day'
     ).cast("struct<start:string,end:string>")
     )
-    reddit_df = reddit_df.withColumn("date", to_date(col("date_time")))
+    selected_df_with_dates = selected_df_with_dates.withColumn("date", to_date(col("date_time")))
     
     #get month window
-    reddit_df = reddit_df.withColumn(
+    selected_df_with_dates = selected_df_with_dates.withColumn(
     'month_window',
     window(
          col('date_time'), 
          windowDuration= '30 day'
     ).cast("struct<start:string,end:string>")
     )
-    reddit_df = reddit_df.withColumn("date", to_date(col("date_time")))
-    return reddit_df
+    selected_df_with_dates = selected_df_with_dates.withColumn("date", to_date(col("date_time")))
+    return selected_df_with_dates
 
 
 def get_subreddit_topics_df(subreddit_topics_csv):
@@ -72,35 +73,35 @@ def get_subreddit_topics_df(subreddit_topics_csv):
     return subreddit_topics
 
 
-def get_subreddit_topics_column(reddit_df,subreddit_topics):
+def get_subreddit_topics_column(selected_df_with_dates,subreddit_topics):
     #insert topic column into reddit_df
-    reddit_df = reddit_df.join(broadcast(subreddit_topics), on = 'subreddit', how = 'left_outer')
+    reddit_df_with_topics_lists_and_nulls = selected_df_with_dates.join(broadcast(subreddit_topics), on = 'subreddit', how = 'left_outer')
     
     #clean dataframe
-    reddit_df = reddit_df.filter(reddit_df.topic. isNotNull())
+    reddit_df_with_topics_lists = reddit_df_with_topics_lists_and_nulls.filter(reddit_df_with_topics_lists_and_nulls. isNotNull())
     
     #for topics with multiple topics split into single topics
-    reddit_df = reddit_df.withColumn('topic', explode(split(col('topic'), ',')))
-    return reddit_df
+    reddit_df_with_topics = reddit_df_with_topics_lists.withColumn('topic', explode(split(col('topic'), ',')))
+    return  reddit_df_with_topics
 
 ### HERE IS WHERE IT SHOULD BE EXPORTED TO ELASTIC SEARCH
 
-def get_partitioned_df(reddit_df):
+def get_partitioned_df( reddit_df_with_topics):
     #partition by 13 years x 12 months and nearest multiple of number of cores (108)
-    reddit_df = reddit_df.repartition(200,["topic","month_window"])
-    return reddit_df
+    reddit_df_partitioned =  reddit_df_with_topics.repartition(200,["topic","month_window"])
+    return reddit_df_partitioned
 
-def get_tokenized_df(reddit_df):
+def get_tokenized_df(reddit_df_partitioned):
     #split into individual words
     tokenizer = Tokenizer(inputCol='body', outputCol='words_token')
-    reddit_df = tokenizer.transform(reddit_df).select('topic','week_window','month_window','day_window','date', 'words_token', 'date_time')
+    reddit_df_tokenized = tokenizer.transform(reddit_df_partitioned).select('topic','week_window','month_window','day_window','date', 'words_token', 'date_time')
     
     #remove stop words
     remover = StopWordsRemover(inputCol='words_token', outputCol='words_no_stops')
-    reddit_df = remover.transform(reddit_df).select('topic','month_window','week_window','day_window','words_no_stops','date','date_time')
+    reddit_df_no_stops = remover.transform(reddit_df_tokenized).select('topic','month_window','week_window','day_window','words_no_stops','date','date_time')
     
     #remove punctuation
-    reddit_df = reddit_df.withColumn('words_and_punct', explode('words_no_stops')).select('topic','week_window','month_window','day_window','words_and_punct','date', 'date_time')
+    reddit_df_no_punctuation = reddit_df.withColumn('words_and_punct', explode('words_no_stops')).select('topic','week_window','month_window','day_window','words_and_punct','date', 'date_time')
     reddit_df = reddit_df.withColumn('word', explode(split(col('words_and_punct'), '[\W_]+'))).select('topic','week_window','month_window','day_window','word','date', 'date_time')
     reddit_df = reddit_df.withColumn('word', lower(col('word')))
     reddit_df = reddit_df.filter( reddit_df['word'].rlike('[a-zA-Z]'))
@@ -202,7 +203,7 @@ def get_changes_in_rolling_average(reddit_df):
                                     .over(windowSpec_day))
     reddit_df = reddit_df.withColumn('change_in_daily_average', 
                                      (col('daily_freq_rolling_average') - col('prev_day_rolling_average')))
-    reddit_df = reddit_df.drop('prev_day_rolling_average', 'day_window')
+    reddit_df = reddit_df.drop('prev_day_rolling_average')
     
     windowSpec_week = \
      Window \
@@ -214,7 +215,7 @@ def get_changes_in_rolling_average(reddit_df):
                                     .over(windowSpec_week))
     reddit_df = reddit_df.withColumn('change_in_weekly_average', 
                                      (col('weekly_freq_rolling_average') - col('prev_week_rolling_average')))
-    reddit_df = reddit_df.drop('prev_week_rolling_average','week_window')
+    reddit_df = reddit_df.drop('prev_week_rolling_average')
     
     windowSpec_month = \
      Window \
@@ -226,7 +227,7 @@ def get_changes_in_rolling_average(reddit_df):
                                     .over(windowSpec_month))
     reddit_df = reddit_df.withColumn('change_in_monthly_average', 
                                      (col('monthly_freq_rolling_average') - col('prev_month_rolling_average')))
-    reddit_df = reddit_df.drop('prev_month_rolling_average','month_window')
+    reddit_df = reddit_df.drop('prev_month_rolling_average')
     
     
     
@@ -265,3 +266,6 @@ if __name__ == "__main__":
     reddit_df = get_changes_in_rolling_average(reddit_df)
     
     write_to_database(reddit_df)
+
+#spark submit:
+#nohup spark-submit --master spark://10.0.0.16:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3, --packages org.postgresql:postgresql:42.2.5 --conf spark.akka.frameSize=1028 --executor-memory 4000M  --driver-memory 6g --conf spark.yarn.executor.memoryOverhead=2000 combined_read_and_process.py
