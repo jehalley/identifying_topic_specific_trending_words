@@ -32,7 +32,7 @@ def get_date_columns(reddit_df):
     #Some of these dates might seem redundant but postgres takes a regular date
     #and many spark functions seem to just work with date_time structs
     
-    #convert created at utc to string date and make new column
+    #date_time is needed for a step in the tokenization where I drop duplicates to avoid cases where one comment is used multiple times in a single comment
     reddit_df = reddit_df.withColumn('date_time', from_unixtime('created_utc'))
     
     #bin comments to 1 day windows and make new column saving the window
@@ -242,7 +242,7 @@ def write_to_database(reddit_df):
         "driver": "org.postgresql.Driver",
         "batchsize": "10000"   
     }
-    reddit_df.write.jdbc(url=url, table="reddit_results_test", mode= "overwrite", properties=properties)
+    reddit_df.write.jdbc(url=url, table="reddit_results", mode= "overwrite", properties=properties)
    
     
 if __name__ == "__main__":
