@@ -59,7 +59,7 @@ def get_topics_as_options(subreddit_topics_csv):
     return topics_as_options
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-subreddit_topics_csv = '/Users/JeffHalley/subreddit_topics.csv'
+subreddit_topics_csv = '../subreddit_topics.csv'
 topics_as_options = get_topics_as_options(subreddit_topics_csv)
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
