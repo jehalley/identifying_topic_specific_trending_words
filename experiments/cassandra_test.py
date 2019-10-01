@@ -221,6 +221,7 @@ def write_to_database(reddit_df):
     .format("org.apache.spark.sql.cassandra")\
     .mode('append')\
     .options(table="reddit_results_date_as_clustering", keyspace="word")\
+    .option("numPartitions", "200") \
     .option(batchsize = "10000")\
     .save()
     
@@ -255,7 +256,7 @@ if __name__ == "__main__":
     #write_to_database(reddit_df)
 
 #spark submit
-# spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3 --conf spark.cassandra.connection.host=10.0.0.4,10.0.0.25,10.0.0.2 --packages datastax:spark-cassandra-connector:2.4.0-s_2.11 --conf spark.akka.frameSize=1028 --py-files v0.7.0.zip --executor-memory 6g  --driver-memory 6g combined_cassandra.py
+# nohup spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3 --conf spark.cassandra.connection.host=10.0.0.4,10.0.0.25,10.0.0.2 --packages datastax:spark-cassandra-connector:2.4.0-s_2.11 --conf spark.akka.frameSize=1028 --py-files v0.7.0.zip --executor-memory 6g  --driver-memory 6g combined_cassandra.py
     
 #CREATE TABLE word.reddit_results (
 #   ...     topic text,
