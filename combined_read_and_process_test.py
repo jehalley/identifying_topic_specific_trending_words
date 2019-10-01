@@ -109,7 +109,7 @@ def get_subreddit_topics_column(reddit_df,subreddit_topics):
 
 def get_partitioned_df(reddit_df):
     #partition by 13 years x 12 months and nearest multiple of number of cores (108)
-    reddit_df = reddit_df.repartition(32832,["topic","month_window"])
+    reddit_df = reddit_df.repartition(["topic","month_window"])
     return reddit_df
 
 def get_tokenized_df(reddit_df):
@@ -144,7 +144,7 @@ def get_word_counts(reddit_df):
 def get_word_counts_for_combined(reddit_df):   
     reddit_total_wc = reddit_df.groupby('word','month_window','day_window').sum()
     reddit_total_wc = reddit_total_wc.withColumnRenamed("sum(count)","count_per_day_all")
-    reddit_total_wc = reddit_total_wc.repartition(32832,["month_window","word"])
+    reddit_total_wc = reddit_total_wc.repartition(["month_window","word"])
     reddit_df = reddit_df.join(reddit_total_wc, on = ['word','day_window', 'month_window'], how = 'left_outer')
     return reddit_df
 
@@ -152,7 +152,7 @@ def get_word_counts_for_combined(reddit_df):
 def get_total_word_count_per_day_all(reddit_df):
     word_count_sum = reddit_df.groupBy('day_window','month_window').agg(sum('count'))
     word_count_sum = word_count_sum.withColumnRenamed("sum(count)","total_word_count_per_day_all")
-    word_count_sum = word_count_sum.repartition(32832,["month_window",'day_window'])
+    word_count_sum = word_count_sum.repartition(["month_window",'day_window'])
     reddit_df = reddit_df.join(word_count_sum, on = ['day_window', 'month_window'], how = 'left_outer')
     return reddit_df
 
@@ -160,7 +160,7 @@ def get_total_word_count_per_day_all(reddit_df):
 def get_total_word_count_per_day_topic(reddit_df):
     topic_count_sum = reddit_df.groupBy('day_window', 'month_window','topic').agg(sum('count'))
     topic_count_sum = topic_count_sum.withColumnRenamed("sum(count)","total_word_count_per_day_topic")
-    topic_count_sum = topic_count_sum.repartition(32832,["month_window","topic"])
+    topic_count_sum = topic_count_sum.repartition(["month_window","topic"])
     reddit_df = reddit_df.join(topic_count_sum, on = ['day_window','month_window','topic'], how = 'left_outer')
     return reddit_df
 
@@ -227,7 +227,7 @@ def write_to_database(reddit_df):
     
 if __name__ == "__main__":
     spark = start_spark_session()
-    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
+    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/'
     subreddit_topics_csv = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics/subreddit_topics.csv'
     reddit_df = get_reddit_df(reddit_directory_path)
     reddit_df = drop_irrelevant_columns(reddit_df)
