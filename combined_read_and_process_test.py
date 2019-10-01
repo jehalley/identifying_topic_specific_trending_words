@@ -6,11 +6,10 @@ Created on Tue Sep 24 13:55:37 2019
 @author: JeffHalley
 """
 
+from pyspark.ml.feature import Tokenizer, StopWordsRemover
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, col, window, broadcast, lower, explode, split, avg, sum, lag, to_date
 from pyspark.sql.window import Window
-from cassandra.cluster import Cluster
-from pyspark.ml.feature import Tokenizer, StopWordsRemover
 
 
 def start_spark_session():
@@ -216,20 +215,18 @@ def get_date_column(reddit_df):
     return reddit_df
 
 def write_to_database(reddit_df):
+    url = "jdbc:postgresql://10.0.0.8:5431/word"
+    properties = {
+        "user": "jh",
+        "password": "jh",
+        "driver": "org.postgresql.Driver",
+        "batchsize": "10000"   
+    }
+    reddit_df.write.jdbc(url=url, table="reddit_results_9_29", mode= "overwrite", properties=properties)
    
-    reddit_df.write\
-    .format("org.apache.spark.sql.cassandra")\
-    .mode('append')\
-    .options(table="reddit_results_date_as_clustering", keyspace="word")\
-    .option(batchsize = "10000")\
-    .save()
-    
     
 if __name__ == "__main__":
     spark = start_spark_session()
-    #create cassandra cluster
-    cluster = Cluster(["10.0.0.4" , "10.0.0.25", "10.0.0.2" ])
-    session = cluster.connect()
     reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
     subreddit_topics_csv = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/subreddit_topics/subreddit_topics.csv'
     reddit_df = get_reddit_df(reddit_directory_path)
@@ -249,36 +246,5 @@ if __name__ == "__main__":
     reddit_df = get_date_column(reddit_df) 
     write_to_database(reddit_df)
 
-    
-    #reddit_rdd = reddit_df.rdd.map(tuple)
-    #reddit_df.saveToCassandra("word", "test")
-    #write_to_database(reddit_df)
-
-#spark submit
-# spark-submit --master spark://10.0.0.24:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3 --conf spark.cassandra.connection.host=10.0.0.4,10.0.0.25,10.0.0.2 --packages datastax:spark-cassandra-connector:2.4.0-s_2.11 --conf spark.akka.frameSize=1028 --py-files v0.7.0.zip --executor-memory 6g  --driver-memory 6g combined_cassandra.py
-    
-#CREATE TABLE word.reddit_results (
-#   ...     topic text,
-#   ...     word text,
-#   ...     date date,
-#   ...     change_in_rolling_average double,
-#   ...     count bigint,
-#   ...     count_per_day_all bigint,
-#   ...     rolling_average double,
-#   ...     sub_freq_to_all_freq_ratio double,
-#   ...     total_word_count_per_day_all bigint,
-#   ...     total_word_count_per_day_topic bigint,
-#   ...     PRIMARY KEY ((topic, date), word, change_in_rolling_average));
-    
-#CREATE TABLE word.reddit_results_date_as_clustering(
-#      topic text,
-#      word text,
-#       date date,
-#       change_in_rolling_average double,
-#        count bigint,
-#        count_per_day_all bigint,
-#       rolling_average double,
-#       sub_freq_to_all_freq_ratio double,
-#       total_word_count_per_day_all bigint,
-#        total_word_count_per_day_topic bigint,
-#       PRIMARY KEY ((topic), date, word, change_in_rolling_average));
+#spark submit:
+#nohup spark-submit --master spark://10.0.0.16:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3, --packages org.postgresql:postgresql:42.2.5 --conf spark.akka.frameSize=1028 --executor-memory 4000M  --driver-memory 6g --conf spark.yarn.executor.memoryOverhead=2000 combined_read_and_process.py
