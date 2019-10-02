@@ -16,42 +16,34 @@ import psycopg2
 import numpy as np
 
 
-#initial_topic = 'Basketball'
-#start_date_string = "2018-07-01"
-#end_date_string = "2018-07-02"
+initial_topic = 'Basketball'
+start_date_string = "2018-07-01"
+end_date_string = "2018-07-02"
 
 connection = psycopg2.connect(host='127.0.0.1', port=5431, user='jh', password='jh', dbname='word')
-#query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio  FROM reddit_results WHERE topic = 'Basketball' AND '[2016-01-01, 2017-01-01]'::daterange @> date ORDER BY sub_freq_to_all_freq_ratio  DESC LIMIT 10;"
-#query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_weekly_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
-#cursor = connection.cursor()
-#cursor.execute(query)
-#data = cursor.fetchall()
-#query_data = pd.DataFrame(data = data, columns=['topic', 
-#                                                          'date',
-#                                                          'word',
-#                                                          'count',
-#                                                          'freq_in_topic',
-#                                                          'topic_relevance',
-#                                                          'change_in_relevance', 
-#                                                          ])
-#
-#query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_data['freq_in_topic']
-#average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
-#top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.20)]
-#query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
-#query_data = query_data.sort_values('adjusted_change_in_freq', ascending=False)
-#df_with_extra_columns = query_data.head(10)
-#df = df_with_extra_columns[['topic','word','topic_relevance_y','adjusted_change_in_freq']]
-#df.columns = ['topic','word','topic_relevance','adjusted_change_in_freq']
-#
-#words = df.word.unique().tolist()
-#fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=True,vertical_spacing=0.009,horizontal_spacing=0.009)
-#fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
-#for word in words:
-#    word_results =  query_data[query_data['word'] == word][['count','date']].sort_values(by=['date'])
-#    fig.append_trace({'x':word_results['date'].tolist(),'y':word_results['count'].tolist(),'type':'scatter','name': word},1,1)
-#
-#fig
+query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio  FROM reddit_results WHERE topic = 'Basketball' AND '[2016-01-01, 2017-01-01]'::daterange @> date ORDER BY sub_freq_to_all_freq_ratio  DESC LIMIT 10;"
+query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_weekly_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
+cursor = connection.cursor()
+cursor.execute(query)
+data = cursor.fetchall()
+query_data = pd.DataFrame(data = data, columns=['topic', 
+                                                          'date',
+                                                          'word',
+                                                          'count',
+                                                          'freq_in_topic',
+                                                          'topic_relevance',
+                                                          'change_in_relevance', 
+                                                          ])
+
+query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_data['freq_in_topic']
+average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
+top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.20)]
+query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
+query_data = query_data.sort_values('adjusted_change_in_freq', ascending=False)
+df_with_extra_columns = query_data.head(10)
+df = df_with_extra_columns[['topic','word','topic_relevance_y','adjusted_change_in_freq']]
+df.columns = ['topic','word','topic_relevance','adjusted_change_in_freq']
+
 
 #this will be applied to the list of subreddits explained below
 def topic_to_options_dict(x):
@@ -101,26 +93,24 @@ app.layout = html.Div([
     html.Div(id='output-container-date-picker-range'),
     
     dash_table.DataTable(
-        id='datatable-interactivity'),
-            
-#        id='datatable-interactivity',
-#        columns=[
-#            {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
-#        ],
-#        data=df.to_dict('records'),
-#        editable=True,
-#        filter_action="native",
-#        sort_action="native",
-#        sort_mode="multi",
-#        column_selectable="single",
-#        row_selectable="multi",
-#        row_deletable=True,
-#        selected_columns=[],
-#        selected_rows=[],
-#        page_action="native",
-#        page_current= 0,
-#        page_size= 10,
-#    ),
+        id='datatable-interactivity',
+        columns=[
+            {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
+        ],
+        data=df.to_dict('records'),
+        editable=True,
+        filter_action="native",
+        sort_action="native",
+        sort_mode="multi",
+        column_selectable="single",
+        row_selectable="multi",
+        row_deletable=True,
+        selected_columns=[],
+        selected_rows=[],
+        page_action="native",
+        page_current= 0,
+        page_size= 10,
+    ),
     html.Div(id='datatable-interactivity-container'),
     
     dcc.Graph(id='graph'),
