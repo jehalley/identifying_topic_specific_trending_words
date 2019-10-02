@@ -51,6 +51,8 @@ for word in words:
     word_results =  query_data[query_data['word'] == word][['count','date']].sort_values(by=['date'])
     fig.append_trace({'x':word_results['date'].tolist(),'y':word_results['count'].tolist(),'type':'scatter','name': word},1,1)
 
+fig
+
 #this will be applied to the list of subreddits explained below
 def topic_to_options_dict(x):
     options_dict = ast.literal_eval("{'label': '"+ x +"', 'value': '" + x + "'}")
