@@ -208,7 +208,7 @@ def update_graph(jsonified_query_data):
     
     df = query_data.head(10)
     words = df.word.unique().tolist()
-    fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=True,vertical_spacing=0.009,horizontal_spacing=0.009)
+    fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=False,vertical_spacing=0.009,horizontal_spacing=0.009)
     fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
     for word in words:
         word_results =  query_data[query_data['word'] == word][['count','date']].sort_values(by=['date'])
