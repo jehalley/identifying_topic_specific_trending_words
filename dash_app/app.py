@@ -37,12 +37,19 @@ query_data = pd.DataFrame(data = data, columns=['topic',
 
 query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_data['freq_in_topic']
 average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
-top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.50)]
+top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
 query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
 query_data = query_data.sort_values('adjusted_change_in_freq', ascending=False)
 df_with_extra_columns = query_data.head(10)
 df = df_with_extra_columns[['topic','word','topic_relevance_y','adjusted_change_in_freq']]
 df.columns = ['topic','word','topic_relevance','adjusted_change_in_freq']
+
+words = df.word.unique().tolist()
+fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=True,vertical_spacing=0.009,horizontal_spacing=0.009)
+fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
+for word in words:
+    word_results =  query_data[query_data['word'] == word][['count','date']].sort_values(by=['date'])
+    fig.append_trace({'x':word_results['date'].tolist(),'y':word_results['count'].tolist(),'type':'scatter','name': word},1,1)
 
 #this will be applied to the list of subreddits explained below
 def topic_to_options_dict(x):
@@ -192,7 +199,7 @@ def update_table(topic, date_range):
     
     query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_data['freq_in_topic']
     average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
-    top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.50)]
+    top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
     query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
     query_data = query_data.sort_values('adjusted_change_in_freq', ascending=False)
     #query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
