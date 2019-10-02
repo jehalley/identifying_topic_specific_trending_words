@@ -44,6 +44,7 @@ df_with_extra_columns = query_data.head(10)
 df = df_with_extra_columns[['topic','word','topic_relevance_y','adjusted_change_in_freq']]
 df.columns = ['topic','word','topic_relevance','adjusted_change_in_freq']
 
+jsonified_query_data = query_data.to_json(date_format='iso', orient='split')
 
 #this will be applied to the list of subreddits explained below
 def topic_to_options_dict(x):
