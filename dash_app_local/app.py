@@ -15,25 +15,52 @@ import plotly
 import psycopg2
 import numpy as np
 
+#def get_days_between(d1, d2):
+#    d1 = dt.strptime(d1, "%Y-%m-%d")
+#    d2 = dt.strptime(d2, "%Y-%m-%d")
+#    return abs((d2 - d1).days)
+#
+#def get_query(topic,start_date_string, end_date_string):
+#    days_between = get_days_between(start_date_string,end_date_string)
+#    if days_between > 14:
+#        query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_monthly_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_monthly_average DESC;"
+#    
+#    if days_between < 14 and days_between > 2:
+#        query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_weekly_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_weekly_average DESC;"
+#        
+#    if days_between < 2:
+#        query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_daily_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_daily_average DESC;"
+#    
+#    return query
 
-def get_days_between(d1, d2):
-    d1 = dt.strptime(d1, "%Y-%m-%d")
-    d2 = dt.strptime(d2, "%Y-%m-%d")
-    return abs((d2 - d1).days)
+initial_topic = 'Basketball'
+start_date_string = "2018-07-01"
+end_date_string = "2018-07-14"
 
-def get_query(topic,start_date_string, end_date_string):
-    days_between = get_days_between(start_date_string,end_date_string)
-    if days_between > 14:
-        query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio, count, change_in_monthly_average, count_per_day_all, total_word_count_per_day_all FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_monthly_average DESC;"
-    
-    if days_between < 14 and days_between > 2:
-        query = "SELECT topic, word, date, count, sub_freq_to_all_freq_ratio, change_in_weekly_average, count_per_day_all, total_word_count_per_day_all FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_weekly_average DESC;"
-        
-    if days_between < 2:
-        query = "SELECT topic, word, date, count, sub_freq_to_all_freq_ratio, change_in_daily_average, count_per_day_all, total_word_count_per_day_all FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_daily_average DESC;"
-    
-    return query
+connection = psycopg2.connect(host='52.25.211.129', port=5431, user='jh', password='jh', dbname='word')
+query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_monthly_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_monthly_average DESC;"
+#query = get_query(initial_topic, start_date_string, end_date_string, )
+cursor = connection.cursor()
+cursor.execute(query)
+data = cursor.fetchall()
 
+unprocessed_query_df = pd.DataFrame(data = data, columns=['topic', 
+                                                      'date',
+                                                      'word',
+                                                      'count',
+                                                      'freq_in_topic',
+                                                      'topic_relevance',
+                                                      'change_in_relevance', 
+                                                      ])
+
+unprocessed_query_df['adjusted_change_in_freq'] = unprocessed_query_df['change_in_relevance']/unprocessed_query_df['freq_in_topic']
+
+#calculate average relevance score so only most relevant words will be considered
+average_relevance = pd.DataFrame(unprocessed_query_df.groupby('word')['topic_relevance'].mean())
+most_relevant_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.50)]
+query_data_for_most_relevant_words = pd.merge(most_relevant_words, unprocessed_query_df, how='left', on = 'word')
+query_data = query_data_for_most_relevant_words.sort_values('adjusted_change_in_freq', ascending=False)
+df = query_data.head(10)
 
 #this will be applied to the list of subreddits explained below
 def topic_to_options_dict(x):
@@ -60,57 +87,9 @@ def get_topics_as_options(subreddit_topics_csv):
     topics_as_options = [topic_to_options_dict(topic) for topic in topics]
     return topics_as_options
 
-def get_query_data_df(query,connection):
-    cursor = connection.cursor()
-    cursor.execute(query)
-    data = cursor.fetchall()
-    
-    unprocessed_query_df = pd.DataFrame(data = data, columns=['topic', 
-                                                          'word', 
-                                                          'date', 
-                                                          'count', 
-                                                          'topic_relevance',
-                                                          'change_in_freq', 
-                                                          'daily_count',
-                                                          'daily_total_wc'])
-    
-    #calculate average relevance score so only most relevant words will be considered
-    average_relevance = pd.DataFrame(unprocessed_query_df.groupby('word')['topic_relevance'].mean())
-    most_relevant_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.50)]
-    
-    query_data_for_most_relevant_words = pd.merge(most_relevant_words, unprocessed_query_df, how='left', on = 'word')
-    query_data_df = query_data_for_most_relevant_words.sort_values('change_in_rolling_average', ascending=False)
-    
-    return query_data_df
-    
-def get_table_df(query_data_df):
-    table_df = query_data_df.head(10).drop(['count',
-                                             'date',
-                                            'change_in_freq',
-                                            'daily_count',
-                                            'daily_total_wc'
-                                            ])
-    return table_df
-    
-    
-    
-connection = psycopg2.connect(host='52.25.211.129', port=5431, user='jh', password='jh', dbname='word')
-
-initial_topic = 'Basketball'
-start_date_string = "2017-01-01"
-end_date_string = "2017-02-01"
-
-query = get_query(initial_topic, start_date_string, end_date_string)    
-
-query_data_df = get_query_data_df(query,connection)
-
-table_df = get_table_df(query_data_df)
-
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 subreddit_topics_csv = 'subreddit_topics.csv'
 topics_as_options = get_topics_as_options(subreddit_topics_csv)
-
-
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = html.Div([
@@ -122,20 +101,20 @@ app.layout = html.Div([
     
     dcc.DatePickerRange(
         id='my-date-picker-range',
-        min_date_allowed=dt(2006, 12, 12),
-        max_date_allowed=dt(2017, 12, 31 ),
-        #initial_visible_month=dt(2013, 1, 1),
-        start_date = dt(2016, 1, 1),
-        end_date=dt(2017, 1, 1)
+        min_date_allowed=dt(2018, 7, 1),
+        max_date_allowed=dt(2018, 7, 31 ),
+        initial_visible_month=dt(2018, 7, 1),
+        start_date = dt(2018, 7, 7),
+        end_date=dt(2018, 7, 14)
     ),
     html.Div(id='output-container-date-picker-range'),
     
     dash_table.DataTable(
         id='datatable-interactivity',
         columns=[
-            {"name": i, "id": i, "deletable": True, "selectable": True} for i in table_df.columns
+            {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
         ],
-        data=table_df.to_dict('records'),
+        data=df.to_dict('records'),
         editable=True,
         filter_action="native",
         sort_action="native",
@@ -213,16 +192,33 @@ def get_date_range(start_date, end_date):
     [dash.dependencies.Output('datatable-interactivity', 'data'),
      dash.dependencies.Output('query_results', 'children')],
     [dash.dependencies.Input('topic_from_pulldown', 'children'),
-     dash.dependencies.Input('my-date-picker-range', 'start_date'),
-     dash.dependencies.Input('my-date-picker-range', 'end_date')])
-def update_table(topic, start_date, end_date):
+     dash.dependencies.Input('chosen_date_range_string', 'children')])
+def update_table(topic, date_range):
     #global topic
-    query = get_query(initial_topic, start_date, end_date)    
-    query_data_df = get_query_data_df(query,connection)
-    table_df = get_table_df(query_data_df)
-    data=table_df.to_dict('records')
+    cursor = connection.cursor()
+    cursor.execute(query)
+    data = cursor.fetchall()
     
-    return data, query_data_df.to_json(date_format='iso', orient='split')
+    unprocessed_query_df = pd.DataFrame(data = data, columns=['topic', 
+                                                          'date',
+                                                          'word',
+                                                          'count',
+                                                          'freq_in_topic',
+                                                          'topic_relevance',
+                                                          'change_in_relevance', 
+                                                          ])
+    
+    unprocessed_query_df['adjusted_change_in_freq'] = unprocessed_query_df['change_in_relevance']/unprocessed_query_df['freq_in_topic']
+    
+    #calculate average relevance score so only most relevant words will be considered
+    average_relevance = pd.DataFrame(unprocessed_query_df.groupby('word')['topic_relevance'].mean())
+    most_relevant_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.50)]
+    query_data_for_most_relevant_words = pd.merge(most_relevant_words, unprocessed_query_df, how='left', on = 'word')
+    query_data = query_data_for_most_relevant_words.sort_values('adjusted_change_in_freq', ascending=False)
+    df = query_data.head(10)
+
+    data=df.to_dict('records')
+    return data, query_data.to_json(date_format='iso', orient='split')
 
 @app.callback(dash.dependencies.Output('graph', 'figure'), [dash.dependencies.Input('query_results', 'children')])
 def update_graph(jsonified_query_data):
@@ -239,7 +235,5 @@ def update_graph(jsonified_query_data):
     return fig
 
 
-
 if __name__ == '__main__':
     app.run_server(debug=False)
-    #app.run_server(debug=False, host='0.0.0.0')
