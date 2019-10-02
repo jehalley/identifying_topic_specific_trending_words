@@ -135,7 +135,7 @@ app.layout = html.Div([
         selected_rows=[],
         page_action="native",
         page_current= 0,
-        page_size= 10,
+        page_size= 15,
     ),
     html.Div(id='datatable-interactivity-container'),
     
@@ -268,11 +268,11 @@ def update_graph(jsonified_query_data,jsonified_df):
     df = pd.read_json(jsonified_df, orient='split')
     
     words = df.word.unique().tolist()
-    fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=True,vertical_spacing=0.009,horizontal_spacing=0.009)
+    fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=False,vertical_spacing=0.009,horizontal_spacing=0.009)
     fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
     for word in words:
-        word_results =  query_data[query_data['word'] == word][['count','date']].sort_values(by=['date'])
-        word_results.columns = ['counts','date']
+        word_results =  query_data[query_data['word'] == word][['freq_in_topic','date']].sort_values(by=['date'])
+        word_results.columns = ['frequency','date']
         fig.append_trace({'x':word_results.date,'y':word_results.counts,'type':'scatter','name': word},1,1)
     return fig
 
