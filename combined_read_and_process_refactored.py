@@ -26,7 +26,7 @@ def get_reddit_df(directory_path):
     return reddit_df
 
 def select_relevant_columns(reddit_df):
-    selected_df = reddit_df.select('created_utc','body','permalink','score','subreddit')
+    selected_df = reddit_df.select('author_created_utc','body','permalink','score','subreddit')
     return reddit_df
 
 def get_date_columns(selected_df):  
@@ -63,7 +63,7 @@ def get_date_columns(selected_df):
          windowDuration= '30 day'
     ).cast("struct<start:string,end:string>")
     )
-    selected_df_with_dates = selected_df_with_dates.withColumn("date", to_date(col("date_time")))
+    selected_df_with_dates = selected_df_with_dates.withColumn('date', to_date(col('date_time')))
     return selected_df_with_dates
 
 
