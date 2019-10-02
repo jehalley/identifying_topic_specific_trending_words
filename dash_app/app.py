@@ -178,7 +178,17 @@ def get_date_range(start_date, end_date):
      dash.dependencies.Input('my-date-picker-range', 'end_date')])
 def update_table(topic, start_date, end_date):
     #global topic
-    "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_weekly_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
+    if start_date is not None:
+        start_date = dt.strptime(start_date, '%Y-%m-%d')
+        start_date_string = start_date.strftime('%Y-%m-%d')
+        
+    if end_date is not None:
+        end_date = dt.strptime(end_date, '%Y-%m-%d')
+        end_date_string = end_date.strftime('%Y-%m-%d')
+    
+    date_range = start_date_string + ", " + end_date_string
+    
+    query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_weekly_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + date_range + "]'::daterange @> date;"
     cursor = connection.cursor()
     cursor.execute(query)
     data = cursor.fetchall()
