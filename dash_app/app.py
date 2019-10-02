@@ -212,7 +212,8 @@ def update_graph(jsonified_query_data):
     fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
     for word in words:
         word_results =  query_data[query_data['word'] == word][['count','date']].sort_values(by=['date'])
-        fig.append_trace({'x':word_results['date'].tolist(),'y':word_results['count'].tolist(),'type':'scatter','name': word},1,1)
+        fig.append_trace({'x':word_results.date,'y':word_results.count,'type':'scatter','name': word},1,1)
+        #fig.append_trace({'x':word_results['date'].tolist(),'y':word_results['count'].tolist(),'type':'scatter','name': word},1,1)
     return fig
 
 
