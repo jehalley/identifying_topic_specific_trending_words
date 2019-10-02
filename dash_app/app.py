@@ -72,11 +72,11 @@ app.layout = html.Div([
     
     dcc.DatePickerRange(
         id='my-date-picker-range',
-        min_date_allowed=dt(2006, 12, 12),
-        max_date_allowed=dt(2017, 12, 31 ),
-        #initial_visible_month=dt(2013, 1, 1),
-        start_date = dt(2016, 1, 1),
-        end_date=dt(2017, 1, 1)
+        min_date_allowed=dt(2018, 7, 1),
+        max_date_allowed=dt(2018, 7, 31 ),
+        initial_visible_month=dt(2018, 7, 1),
+        start_date = dt(2018, 7, 1),
+        end_date=dt(2018, 7, 2)
     ),
     html.Div(id='output-container-date-picker-range'),
     
