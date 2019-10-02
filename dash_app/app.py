@@ -61,13 +61,14 @@ average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].m
 top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
 query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
 
-query_data = pd.merge(change_in_adjusted_freq, query_data, how='left', on = 'word')
+query_data = pd.merge( query_data,change_in_adjusted_freq, how='left', on = 'word')
 
-query_data = query_data.sort_values('change_in_adjusted_freq', ascending=False)
+#query_data = query_data.sort_values('change_in_adjusted_freq', ascending=False)
 
 #query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
-df_with_extra_columns = query_data.head(10)
-df = df_with_extra_columns[['topic','word','topic_relevance_y','change_in_adjusted_freq']]
+df_with_extra_columns_and_many_rows_per_word = query_data[['topic','word','topic_relevance_x','change_in_adjusted_freq']]
+df_with_extra_columns = df_with_extra_columns_and_many_rows_per_word.groupby(['topic','word','topic_relevance_x'], as_index=False).sum()
+df = df_with_extra_columns.sort_values('change_in_adjusted_freq', ascending=False).head(15)
 df.columns = ['topic','word','topic_relevance','change_in_freq']
 
 #this will be applied to the list of subreddits explained below
@@ -215,7 +216,7 @@ def update_table(topic, date_range):
                                                           'topic_relevance',
                                                           'change_in_relevance', 
                                                           ])
-    
+
     #get change in frequency adjusted by frequency
     start_day_freq = query_data[query_data['date'] == dt.strptime(start_date_string,'%Y-%m-%d').date()][['word','freq_in_topic']]
     start_day_freq.columns = ['word','start_day_freq']
@@ -230,23 +231,24 @@ def update_table(topic, date_range):
     
     
     
-#    change_in_freq['adjusted_end_freq'] = change_in_freq['topic_relevance_y']/change_in_freq['end_day_freq'] 
-#    change_in_freq['adjusted_start_freq'] = change_in_freq['topic_relevance_x']/change_in_freq['start_day_freq']
-#    change_in_freq['change_in_adjusted_freq'] = change_in_freq['adjusted_end_freq'] - change_in_freq['adjusted_start_freq']
-#     
+    #    change_in_freq['adjusted_end_freq'] = change_in_freq['topic_relevance_y']/change_in_freq['end_day_freq'] 
+    #    change_in_freq['adjusted_start_freq'] = change_in_freq['topic_relevance_x']/change_in_freq['start_day_freq']
+    #    change_in_freq['change_in_adjusted_freq'] = change_in_freq['adjusted_end_freq'] - change_in_freq['adjusted_start_freq']
+    #     
     
     #query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_data['freq_in_topic']
     average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
     top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
     query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
     
-    query_data = pd.merge(change_in_adjusted_freq, query_data, how='left', on = 'word')
-
-    query_data = query_data.sort_values('change_in_adjusted_freq', ascending=False)
+    query_data = pd.merge( query_data,change_in_adjusted_freq, how='left', on = 'word')
+    
+    #query_data = query_data.sort_values('change_in_adjusted_freq', ascending=False)
     
     #query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
-    df_with_extra_columns = query_data.head(10)
-    df = df_with_extra_columns[['topic','word','topic_relevance_y','change_in_adjusted_freq']]
+    df_with_extra_columns_and_many_rows_per_word = query_data[['topic','word','topic_relevance_x','change_in_adjusted_freq']]
+    df_with_extra_columns = df_with_extra_columns_and_many_rows_per_word.groupby(['topic','word','topic_relevance_x'], as_index=False).sum()
+    df = df_with_extra_columns.sort_values('change_in_adjusted_freq', ascending=False).head(15)
     df.columns = ['topic','word','topic_relevance','change_in_freq']
     
     data=df.to_dict('records')
