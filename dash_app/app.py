@@ -39,7 +39,7 @@ query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_
 average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
 top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.50)]
 query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
-query_data = query_data.sort_values('change_in_monthly_average', ascending=False)
+query_data = query_data.sort_values('change_in_relevance', ascending=False)
 df = query_data.head(10)
 
 #this will be applied to the list of subreddits explained below
@@ -192,7 +192,7 @@ def update_table(topic, date_range):
     average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
     top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.50)]
     query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
-    query_data = query_data.sort_values('change_in_monthly_average', ascending=False)
+    query_data = query_data.sort_values('change_in_relevance', ascending=False)
     #query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
     df = query_data.head(10)
     data=df.to_dict('records')
