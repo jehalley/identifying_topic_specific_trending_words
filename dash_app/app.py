@@ -37,7 +37,7 @@ query_data = pd.DataFrame(data = data, columns=['topic',
 
 query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_data['freq_in_topic']
 average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
-top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
+top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.20)]
 query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
 query_data = query_data.sort_values('adjusted_change_in_freq', ascending=False)
 df_with_extra_columns = query_data.head(10)
@@ -201,7 +201,7 @@ def update_table(topic, date_range):
     
     query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_data['freq_in_topic']
     average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
-    top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
+    top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.2)]
     query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
     query_data = query_data.sort_values('adjusted_change_in_freq', ascending=False)
     #query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
