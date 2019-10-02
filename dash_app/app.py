@@ -20,7 +20,9 @@ initial_topic = 'Basketball'
 start_date_string = "2018-07-01"
 end_date_string = "2018-07-02"
 
-connection = psycopg2.connect(host='52.25.211.129', port=5431, user='jh', password='jh', dbname='word')
+#connection = psycopg2.connect(host='52.25.211.129', port=5431, user='jh', password='jh', dbname='word')
+connection = psycopg2.connect(host='127.0.0.1', port=5431, user='jh', password='jh', dbname='word')
+
 #query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio  FROM reddit_results WHERE topic = 'Basketball' AND '[2016-01-01, 2017-01-01]'::daterange @> date ORDER BY sub_freq_to_all_freq_ratio  DESC LIMIT 10;"
 query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_monthly_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_monthly_average DESC;"
 cursor = connection.cursor()
