@@ -219,7 +219,7 @@ def update_table(topic, date_range):
 
     #get change in frequency adjusted by frequency
     start_date_string = date_range.split(",")[0]
-    end_date_string = date_range.split(",")[1]
+    end_date_string = date_range.split(" ")[1]
     start_day_freq = query_data[query_data['date'] == dt.strptime(start_date_string,'%Y-%m-%d').date()][['word','freq_in_topic']]
     start_day_freq.columns = ['word','start_day_freq']
     end_day_freq = query_data[query_data['date'] == dt.strptime(end_date_string,'%Y-%m-%d').date()][['word','freq_in_topic']]
