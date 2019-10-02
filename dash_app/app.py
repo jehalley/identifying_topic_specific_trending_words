@@ -143,7 +143,8 @@ app.layout = html.Div([
     
     html.Div(id='topic_from_pulldown', style={'display': 'none'}),
     html.Div(id='chosen_date_range_string', style={'display': 'none'}),
-    html.Div(id='query_results', style={'display': 'none'})
+    html.Div(id='query_results', style={'display': 'none'}),
+    html.Div(id='top_10_results', style={'display': 'none'})
     
 ])
 
@@ -199,7 +200,8 @@ def get_date_range(start_date, end_date):
 
 @app.callback(
     [dash.dependencies.Output('datatable-interactivity', 'data'),
-     dash.dependencies.Output('query_results', 'children')],
+     dash.dependencies.Output('query_results', 'children'),
+     dash.dependencies.Output('top_10_results', 'children')],
     [dash.dependencies.Input('topic_from_pulldown', 'children'),
      dash.dependencies.Input('chosen_date_range_string', 'children')])
 def update_table(topic, date_range):
@@ -254,14 +256,17 @@ def update_table(topic, date_range):
     df.columns = ['topic','word','topic_relevance','change_in_freq']
     
     data=df.to_dict('records')
-    return data, query_data.to_json(date_format='iso', orient='split')
+    return data, query_data.to_json(date_format='iso', orient='split'), df.to_json(date_format='iso', orient='split')
 
-@app.callback(dash.dependencies.Output('graph', 'figure'), [dash.dependencies.Input('query_results', 'children')])
-def update_graph(jsonified_query_data):
+@app.callback(dash.dependencies.Output('graph', 'figure'), 
+              [dash.dependencies.Input('query_results', 'children'),
+               dash.dependencies.Input('top_10_results', 'children')])
+def update_graph(jsonified_query_data,jsonified_df):
     # json.loads(jsonified_cleaned_data)
     query_data = pd.read_json(jsonified_query_data, orient='split')
     
-    df = query_data.head(10)
+    df = pd.read_json(jsonified_df, orient='split')
+    
     words = df.word.unique().tolist()
     fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=False,vertical_spacing=0.009,horizontal_spacing=0.009)
     fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
