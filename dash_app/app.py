@@ -197,6 +197,7 @@ def update_table(topic, date_range):
     #query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
     df_with_extra_columns = query_data.head(10)
     df = df_with_extra_columns[['topic','word','topic_relevance_y','adjusted_change_in_freq']]
+    df.columns = ['topic','word','topic_relevance','change_in_freq']
     
     data=df.to_dict('records')
     return data, query_data.to_json(date_format='iso', orient='split')
