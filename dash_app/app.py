@@ -273,7 +273,7 @@ def update_graph(jsonified_query_data,jsonified_df):
     for word in words:
         word_results =  query_data[query_data['word'] == word][['freq_in_topic','date']].sort_values(by=['date'])
         word_results.columns = ['frequency','date']
-        fig.append_trace({'x':word_results.date,'y':word_results.counts,'type':'scatter','name': word},1,1)
+        fig.append_trace({'x':word_results.date,'y':word_results.frequency,'type':'scatter','name': word},1,1)
     return fig
 
 
