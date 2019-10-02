@@ -40,8 +40,7 @@ average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].m
 top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.50)]
 query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
 query_data = query_data.sort_values('adjusted_change_in_freq', ascending=False)
-df_with_extra_columns = query_data.head(10)
-df = df_with_extra_columns[['topic','word','topic_relevance_y','adjusted_change_in_freq']]
+df = query_data.head(10)
 
 #this will be applied to the list of subreddits explained below
 def topic_to_options_dict(x):
@@ -195,9 +194,7 @@ def update_table(topic, date_range):
     query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
     query_data = query_data.sort_values('adjusted_change_in_freq', ascending=False)
     #query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
-    df_with_extra_columns = query_data.head(10)
-    df = df_with_extra_columns[['topic','word','topic_relevance_y','adjusted_change_in_freq']]
-    
+    df = query_data.head(10)
     data=df.to_dict('records')
     return data, query_data.to_json(date_format='iso', orient='split')
 
