@@ -30,7 +30,7 @@ query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ra
 cursor = connection.cursor()
 cursor.execute(query)
 data = cursor.fetchall()
-query_data = pd.DataFrame(data = data, columns=['topic', 
+query_data_prefilter = pd.DataFrame(data = data, columns=['topic', 
                                                           'date',
                                                           'word',
                                                           'count',
@@ -38,6 +38,10 @@ query_data = pd.DataFrame(data = data, columns=['topic',
                                                           'topic_relevance',
                                                           'freq_rolling_average', 
                                                           ])
+
+#subreddit names seem to pop up occassionaly with the prefix 2f
+query_data = query_data_prefilter[~query_data_prefilter['word'].str.contains("2f")]
+
 #get average relevance to filter the most relevant words
 average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
 top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
@@ -214,7 +218,8 @@ def update_table(topic, date_range):
     cursor = connection.cursor()
     cursor.execute(query)
     data = cursor.fetchall()
-    query_data = pd.DataFrame(data = data, columns=['topic', 
+    
+    query_data_prefilter = pd.DataFrame(data = data, columns=['topic', 
                                                           'date',
                                                           'word',
                                                           'count',
@@ -223,7 +228,8 @@ def update_table(topic, date_range):
                                                           'freq_rolling_average', 
                                                           ])
 
-    #get change in frequency adjusted by frequency
+    #subreddit names seem to pop up occassionaly with the prefix 2f
+    query_data = query_data_prefilter[~query_data_prefilter['word'].str.contains("2f")]
     
     #get average relevance to filter the most relevant words
     average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
