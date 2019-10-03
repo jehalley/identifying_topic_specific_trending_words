@@ -188,7 +188,8 @@ def get_rolling_average_of_daily_freq(reddit_df):
 #    
 #    reddit_df = reddit_df.withColumn('monthly_freq_rolling_average', avg("freq_in_topic").over(windowSpec_month))
 #
-#    reddit_df = reddit_df.drop('timestamp')
+    reddit_df = reddit_df.drop('timestamp')
+    
     return reddit_df
 
 
