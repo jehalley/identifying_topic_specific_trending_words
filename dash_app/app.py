@@ -111,8 +111,8 @@ app.layout = html.Div([
         min_date_allowed=dt(2019, 3, 1),
         max_date_allowed=dt(2019, 5, 31 ),
         initial_visible_month=dt(2019, 5, 1),
-        start_date = dt(2018, 5, 1),
-        end_date=dt(2018, 5, 2)
+        start_date = dt(2019, 5, 1),
+        end_date=dt(2019, 5, 2)
     ),
     html.Div(id='output-container-date-picker-range'),
     
