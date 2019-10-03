@@ -273,7 +273,7 @@ def update_rolling_average_frequency(jsonified_query_data,jsonified_df):
     for word in words:
         word_results =  query_data[query_data['word'] == word][['freq_rolling_average','date']].sort_values(by=['date'])
         word_results.columns = ['frequency_5_day_average','date']
-        fig.append_trace({'x':word_results.date,'y':word_results.requency_5_day_average,'type':'scatter','name': word},1,1)
+        fig.append_trace({'x':word_results.date,'y':word_results.frequency_5_day_average,'type':'scatter','name': word},1,1)
  
     return fig
 
