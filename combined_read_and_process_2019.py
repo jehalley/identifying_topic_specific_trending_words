@@ -69,11 +69,13 @@ def get_date_columns(reddit_df):
 def get_subreddit_topics_df(subreddit_topics_csv):
     #convert subreddit topics csv to spark df
     subreddit_topics = spark.read.csv(subreddit_topics_csv, header='true', inferSchema='true')
+    subreddit_topics = subreddit_topics.withColumn('subreddit', lower(col('subreddit')))
     return subreddit_topics
 
 
 def get_subreddit_topics_column(reddit_df,subreddit_topics):
     #insert topic column into reddit_df
+    reddit_df = reddit_df.withColumn('subreddit', lower(col('subreddit')))
     reddit_df = reddit_df.join(broadcast(subreddit_topics), on = 'subreddit', how = 'left_outer')
     
     #clean dataframe
@@ -169,24 +171,24 @@ def get_rolling_average_of_daily_freq(reddit_df):
      
     reddit_df = reddit_df.withColumn('daily_freq_rolling_average', avg("freq_in_topic").over(windowSpec_day))
     
-    windowSpec_week = \
-    Window \
-     .partitionBy(['topic','word'])\
-     .orderBy(col('timestamp').cast('long'))\
-     .rangeBetween(-days(7), 0)
-    
-    reddit_df = reddit_df.withColumn('weekly_freq_rolling_average', avg("freq_in_topic").over(windowSpec_week))
-
-    
-    windowSpec_month = \
-    Window \
-     .partitionBy(['topic','word'])\
-     .orderBy(col('timestamp').cast('long'))\
-     .rangeBetween(-days(30), 0)
-    
-    reddit_df = reddit_df.withColumn('monthly_freq_rolling_average', avg("freq_in_topic").over(windowSpec_month))
-
-    reddit_df = reddit_df.drop('timestamp')
+#    windowSpec_week = \
+#    Window \
+#     .partitionBy(['topic','word'])\
+#     .orderBy(col('timestamp').cast('long'))\
+#     .rangeBetween(-days(7), 0)
+#    
+#    reddit_df = reddit_df.withColumn('weekly_freq_rolling_average', avg("freq_in_topic").over(windowSpec_week))
+#
+#    
+#    windowSpec_month = \
+#    Window \
+#     .partitionBy(['topic','word'])\
+#     .orderBy(col('timestamp').cast('long'))\
+#     .rangeBetween(-days(30), 0)
+#    
+#    reddit_df = reddit_df.withColumn('monthly_freq_rolling_average', avg("freq_in_topic").over(windowSpec_month))
+#
+#    reddit_df = reddit_df.drop('timestamp')
     return reddit_df
 
 
@@ -204,31 +206,29 @@ def get_changes_in_rolling_average(reddit_df):
                                      (col('daily_freq_rolling_average') - col('prev_day_rolling_average')))
     reddit_df = reddit_df.drop('prev_day_rolling_average', 'day_window')
     
-    windowSpec_week = \
-     Window \
-     .partitionBy(['topic','word'])\
-     .orderBy(reddit_df['week_window'])
-     
-    reddit_df = reddit_df.withColumn('prev_week_rolling_average',
-                                    lag(reddit_df['weekly_freq_rolling_average'])
-                                    .over(windowSpec_week))
-    reddit_df = reddit_df.withColumn('change_in_weekly_average', 
-                                     (col('weekly_freq_rolling_average') - col('prev_week_rolling_average')))
-    reddit_df = reddit_df.drop('prev_week_rolling_average','week_window')
-    
-    windowSpec_month = \
-     Window \
-     .partitionBy(['topic','word'])\
-     .orderBy(reddit_df['month_window'])
-     
-    reddit_df = reddit_df.withColumn('prev_month_rolling_average',
-                                    lag(reddit_df['monthly_freq_rolling_average'])
-                                    .over(windowSpec_month))
-    reddit_df = reddit_df.withColumn('change_in_monthly_average', 
-                                     (col('monthly_freq_rolling_average') - col('prev_month_rolling_average')))
-    reddit_df = reddit_df.drop('prev_month_rolling_average','month_window')
-    
-    
+#    windowSpec_week = \
+#     Window \
+#     .partitionBy(['topic','word'])\
+#     .orderBy(reddit_df['week_window'])
+#     
+#    reddit_df = reddit_df.withColumn('prev_week_rolling_average',
+#                                    lag(reddit_df['weekly_freq_rolling_average'])
+#                                    .over(windowSpec_week))
+#    reddit_df = reddit_df.withColumn('change_in_weekly_average', 
+#                                     (col('weekly_freq_rolling_average') - col('prev_week_rolling_average')))
+#    reddit_df = reddit_df.drop('prev_week_rolling_average','week_window')
+#    
+#    windowSpec_month = \
+#     Window \
+#     .partitionBy(['topic','word'])\
+#     .orderBy(reddit_df['month_window'])
+#     
+#    reddit_df = reddit_df.withColumn('prev_month_rolling_average',
+#                                    lag(reddit_df['monthly_freq_rolling_average'])
+#                                    .over(windowSpec_month))
+#    reddit_df = reddit_df.withColumn('change_in_monthly_average', 
+#                                     (col('monthly_freq_rolling_average') - col('prev_month_rolling_average')))
+#    reddit_df = reddit_df.drop('prev_month_rolling_average','month_window')
     
     return reddit_df
 
@@ -242,7 +242,7 @@ def write_to_database(reddit_df):
         "driver": "org.postgresql.Driver",
         "batchsize": "10000"   
     }
-    reddit_df.write.jdbc(url=url, table="reddit_results_2019", mode= "overwrite", properties=properties)
+    reddit_df.write.jdbc(url=url, table="reddit_results", mode= "overwrite", properties=properties)
    
     
 if __name__ == "__main__":
