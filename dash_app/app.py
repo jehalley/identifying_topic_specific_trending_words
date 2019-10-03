@@ -17,15 +17,15 @@ import numpy as np
 
 #this block of code is for setting up the table that shows when the page loads 
 initial_topic = 'Basketball'
-start_date_string = "2018-07-01"
-end_date_string = "2018-07-02"
+start_date_string = "2019-05-01"
+end_date_string = "2019-05-02"
 
 #connection = psycopg2.connect(host='52.25.211.129', port=5431, user='jh', password='jh', dbname='word')
 connection = psycopg2.connect(host='127.0.0.1', port=5431, user='jh', password='jh', dbname='word')
 
 #query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio  FROM reddit_results WHERE topic = 'Basketball' AND '[2016-01-01, 2017-01-01]'::daterange @> date ORDER BY sub_freq_to_all_freq_ratio  DESC LIMIT 10;"
-query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
-#query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND date >= '" + start_date_string + "' AND date < '" + end_date_string + "';"
+query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_2019 WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
+#query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_2019 WHERE topic = '" + initial_topic + "' AND date >= '" + start_date_string + "' AND date < '" + end_date_string + "';"
 
 cursor = connection.cursor()
 cursor.execute(query)
@@ -137,7 +137,9 @@ app.layout = html.Div([
     ),
     html.Div(id='datatable-interactivity-container'),
     
-    dcc.Graph(id='graph'),
+    dcc.Graph(id='graph_rolling_average_frequency'),
+    
+    dcc.Graph(id='graph_frequency'),
     
     html.Div(id='topic_from_pulldown', style={'display': 'none'}),
     html.Div(id='chosen_date_range_string', style={'display': 'none'}),
@@ -203,11 +205,11 @@ def get_date_range(start_date, end_date):
     [dash.dependencies.Input('topic_from_pulldown', 'children'),
      dash.dependencies.Input('chosen_date_range_string', 'children')])
 def update_table(topic, date_range):
-    query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_test WHERE topic = '" + topic + "' AND '[" + date_range + "]'::daterange @> date;"
+    query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_2019 WHERE topic = '" + topic + "' AND '[" + date_range + "]'::daterange @> date;"
     start_date_string = date_range.split(",")[0]
     end_date_string = date_range.split(" ")[1]
     
-    #query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND date >= '" + start_date_string + "' AND date < '" + end_date_string + "';"
+    #query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_2019 WHERE topic = '" + initial_topic + "' AND date >= '" + start_date_string + "' AND date < '" + end_date_string + "';"
     
     cursor = connection.cursor()
     cursor.execute(query)
@@ -256,10 +258,29 @@ def update_table(topic, date_range):
     data=df.to_dict('records')
     return data, query_data.to_json(date_format='iso', orient='split'), df.to_json(date_format='iso', orient='split')
 
-@app.callback(dash.dependencies.Output('graph', 'figure'), 
+@app.callback(dash.dependencies.Output('graph_rolling_average_frequency', 'figure'), 
               [dash.dependencies.Input('query_results', 'children'),
                dash.dependencies.Input('top_10_results', 'children')])
-def update_graph(jsonified_query_data,jsonified_df):
+def update_rolling_average_frequency(jsonified_query_data,jsonified_df):
+    # json.loads(jsonified_cleaned_data)
+    query_data = pd.read_json(jsonified_query_data, orient='split')
+    df = pd.read_json(jsonified_df, orient='split')
+    
+    words = df.word.unique().tolist()
+    
+    fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=False,vertical_spacing=0.009,horizontal_spacing=0.009)
+    fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
+    for word in words:
+        word_results =  query_data[query_data['word'] == word][['freq_rolling_average','date']].sort_values(by=['date'])
+        word_results.columns = ['frequency_5_day_average','date']
+        fig.append_trace({'x':word_results.date,'y':word_results.requency_5_day_average,'type':'scatter','name': word},1,1)
+ 
+    return fig
+
+@app.callback(dash.dependencies.Output('graph_frequency', 'figure'), 
+              [dash.dependencies.Input('query_results', 'children'),
+               dash.dependencies.Input('top_10_results', 'children')])
+def update_frequency_graph(jsonified_query_data,jsonified_df):
     # json.loads(jsonified_cleaned_data)
     query_data = pd.read_json(jsonified_query_data, orient='split')
     df = pd.read_json(jsonified_df, orient='split')
