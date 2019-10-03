@@ -15,7 +15,7 @@ import plotly
 import psycopg2
 import numpy as np
 
-
+#this block of code is for setting up the table that shows when the page loads 
 initial_topic = 'Basketball'
 start_date_string = "2018-07-01"
 end_date_string = "2018-07-02"
@@ -24,7 +24,7 @@ end_date_string = "2018-07-02"
 connection = psycopg2.connect(host='127.0.0.1', port=5431, user='jh', password='jh', dbname='word')
 
 #query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio  FROM reddit_results WHERE topic = 'Basketball' AND '[2016-01-01, 2017-01-01]'::daterange @> date ORDER BY sub_freq_to_all_freq_ratio  DESC LIMIT 10;"
-query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_monthly_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date ORDER BY change_in_monthly_average DESC;"
+query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_rolling_average FROM reddit_results_test WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
 cursor = connection.cursor()
 cursor.execute(query)
 data = cursor.fetchall()
@@ -34,42 +34,38 @@ query_data = pd.DataFrame(data = data, columns=['topic',
                                                           'count',
                                                           'freq_in_topic',
                                                           'topic_relevance',
-                                                          'change_in_relevance', 
+                                                          'freq_rolling_average', 
                                                           ])
+#get average relevance to filter the most relevant words
+average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
+top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
 
-#get change in frequency adjusted by frequency
-start_day_freq = query_data[query_data['date'] == dt.strptime(start_date_string,'%Y-%m-%d').date()][['word','freq_in_topic']]
+#get top percentile words by merging
+query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
+
+
+#get change in frequency weight by dividing starting frequency this will be used to find the most trending words
+start_day_freq = query_data[query_data['date'] == dt.strptime(start_date_string,'%Y-%m-%d').date()][['word','freq_rolling_average']]
 start_day_freq.columns = ['word','start_day_freq']
-end_day_freq = query_data[query_data['date'] == dt.strptime(end_date_string,'%Y-%m-%d').date()][['word','freq_in_topic']]
+end_day_freq = query_data[query_data['date'] == dt.strptime(end_date_string,'%Y-%m-%d').date()][['word','freq_rolling_average']]
 end_day_freq.columns = ['word','end_day_freq']
 change_in_freq = pd.merge(start_day_freq,end_day_freq, how = 'left', on = 'word')
 change_in_freq['change_in_freq'] = change_in_freq['end_day_freq'] - change_in_freq['start_day_freq']
 change_in_freq['change_in_adjusted_freq'] = change_in_freq['change_in_freq']/change_in_freq['start_day_freq']  
-change_in_adjusted_freq = pd.DataFrame(change_in_freq[['word','change_in_adjusted_freq']]) 
+change_in_adjusted_freq = pd.DataFrame(change_in_freq[['word','change_in_adjusted_freq','end_day_freq']]) 
 
-#sort_values('change_in_adjusted_freq', ascending = False)
+#add trending data, this will be used to sort later
+query_data = pd.merge(query_data,change_in_adjusted_freq, how='left', on = 'word')
 
 
+#the following makes the table of just the top 10 words in terms of change in freq without most of the other data
+df_with_extra_columns_and_many_rows_per_word = query_data[['topic','word','topic_relevance_x','change_in_adjusted_freq','end_day_freq']]
+df_with_extra_columns = df_with_extra_columns_and_many_rows_per_word.groupby(['topic','word','topic_relevance_x','end_day_freq'], as_index=False).sum()
+df_with_adj_freq = df_with_extra_columns.sort_values('change_in_adjusted_freq', ascending=False).head(10)
+df_with_adj_freq_sorted_by_end_day_freq = df_with_adj_freq.sort_values('end_day_freq', ascending=False)
+df = df_with_adj_freq_sorted_by_end_day_freq[['topic','word','topic_relevance_x','end_day_freq']]
+df.columns = ['topic','word','topic_relevance','ending_frequency']
 
-#    change_in_freq['adjusted_end_freq'] = change_in_freq['topic_relevance_y']/change_in_freq['end_day_freq'] 
-#    change_in_freq['adjusted_start_freq'] = change_in_freq['topic_relevance_x']/change_in_freq['start_day_freq']
-#    change_in_freq['change_in_adjusted_freq'] = change_in_freq['adjusted_end_freq'] - change_in_freq['adjusted_start_freq']
-#     
-
-#query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_data['freq_in_topic']
-average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
-top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
-query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
-
-query_data = pd.merge( query_data,change_in_adjusted_freq, how='left', on = 'word')
-
-#query_data = query_data.sort_values('change_in_adjusted_freq', ascending=False)
-
-#query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
-df_with_extra_columns_and_many_rows_per_word = query_data[['topic','word','topic_relevance_x','change_in_adjusted_freq']]
-df_with_extra_columns = df_with_extra_columns_and_many_rows_per_word.groupby(['topic','word','topic_relevance_x'], as_index=False).sum()
-df = df_with_extra_columns.sort_values('change_in_adjusted_freq', ascending=False).head(15)
-df.columns = ['topic','word','topic_relevance','change_in_freq']
 
 #this will be applied to the list of subreddits explained below
 def topic_to_options_dict(x):
@@ -206,7 +202,7 @@ def get_date_range(start_date, end_date):
      dash.dependencies.Input('chosen_date_range_string', 'children')])
 def update_table(topic, date_range):
     #global topic
-    query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, change_in_monthly_average FROM reddit_results_test WHERE topic = '" + topic + "' AND '[" + date_range + "]'::daterange @> date ORDER BY change_in_monthly_average;"
+    query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_rolling_average FROM reddit_results_test WHERE topic = '" + topic + "' AND '[" + date_range + "]'::daterange @> date;"
     cursor = connection.cursor()
     cursor.execute(query)
     data = cursor.fetchall()
@@ -216,44 +212,43 @@ def update_table(topic, date_range):
                                                           'count',
                                                           'freq_in_topic',
                                                           'topic_relevance',
-                                                          'change_in_relevance', 
+                                                          'freq_rolling_average', 
                                                           ])
 
     #get change in frequency adjusted by frequency
     start_date_string = date_range.split(",")[0]
     end_date_string = date_range.split(" ")[1]
-    start_day_freq = query_data[query_data['date'] == dt.strptime(start_date_string,'%Y-%m-%d').date()][['word','freq_in_topic']]
+    
+    
+    #get average relevance to filter the most relevant words
+    average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
+    top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
+    
+    #get top percentile words by merging
+    query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
+    
+    
+    #get change in frequency weight by dividing starting frequency this will be used to find the most trending words
+    start_day_freq = query_data[query_data['date'] == dt.strptime(start_date_string,'%Y-%m-%d').date()][['word','freq_rolling_average']]
     start_day_freq.columns = ['word','start_day_freq']
-    end_day_freq = query_data[query_data['date'] == dt.strptime(end_date_string,'%Y-%m-%d').date()][['word','freq_in_topic']]
+    end_day_freq = query_data[query_data['date'] == dt.strptime(end_date_string,'%Y-%m-%d').date()][['word','freq_rolling_average']]
     end_day_freq.columns = ['word','end_day_freq']
     change_in_freq = pd.merge(start_day_freq,end_day_freq, how = 'left', on = 'word')
     change_in_freq['change_in_freq'] = change_in_freq['end_day_freq'] - change_in_freq['start_day_freq']
     change_in_freq['change_in_adjusted_freq'] = change_in_freq['change_in_freq']/change_in_freq['start_day_freq']  
-    change_in_adjusted_freq = pd.DataFrame(change_in_freq[['word','change_in_adjusted_freq']]) 
+    change_in_adjusted_freq = pd.DataFrame(change_in_freq[['word','change_in_adjusted_freq','end_day_freq']]) 
     
-    #sort_values('change_in_adjusted_freq', ascending = False)
+    #add trending data, this will be used to sort later
+    query_data = pd.merge(query_data,change_in_adjusted_freq, how='left', on = 'word')
     
     
-    
-    #    change_in_freq['adjusted_end_freq'] = change_in_freq['topic_relevance_y']/change_in_freq['end_day_freq'] 
-    #    change_in_freq['adjusted_start_freq'] = change_in_freq['topic_relevance_x']/change_in_freq['start_day_freq']
-    #    change_in_freq['change_in_adjusted_freq'] = change_in_freq['adjusted_end_freq'] - change_in_freq['adjusted_start_freq']
-    #     
-    
-    #query_data['adjusted_change_in_freq'] = query_data['change_in_relevance']/query_data['freq_in_topic']
-    average_relevance = pd.DataFrame(query_data.groupby('word')['topic_relevance'].mean())
-    top_percentile_words = average_relevance[average_relevance.topic_relevance > average_relevance.topic_relevance.quantile(.80)]
-    query_data = pd.merge(top_percentile_words, query_data, how='left', on = 'word')
-    
-    query_data = pd.merge( query_data,change_in_adjusted_freq, how='left', on = 'word')
-    
-    #query_data = query_data.sort_values('change_in_adjusted_freq', ascending=False)
-    
-    #query_data = query_data['topic', 'date', 'word', 'count', 'sub_freq_to_all_freq_ratio_y','change_in_rolling_average']
-    df_with_extra_columns_and_many_rows_per_word = query_data[['topic','word','topic_relevance_x','change_in_adjusted_freq']]
-    df_with_extra_columns = df_with_extra_columns_and_many_rows_per_word.groupby(['topic','word','topic_relevance_x'], as_index=False).sum()
-    df = df_with_extra_columns.sort_values('change_in_adjusted_freq', ascending=False).head(15)
-    df.columns = ['topic','word','topic_relevance','change_in_freq']
+    #the following makes the table of just the top 10 words in terms of change in freq without most of the other data
+    df_with_extra_columns_and_many_rows_per_word = query_data[['topic','word','topic_relevance_x','change_in_adjusted_freq','end_day_freq']]
+    df_with_extra_columns = df_with_extra_columns_and_many_rows_per_word.groupby(['topic','word','topic_relevance_x','end_day_freq'], as_index=False).sum()
+    df_with_adj_freq = df_with_extra_columns.sort_values('change_in_adjusted_freq', ascending=False).head(10)
+    df_with_adj_freq_sorted_by_end_day_freq = df_with_adj_freq.sort_values('end_day_freq', ascending=False)
+    df = df_with_adj_freq_sorted_by_end_day_freq[['topic','word','topic_relevance_x','end_day_freq']]
+    df.columns = ['topic','word','topic_relevance','ending_frequency']
     
     data=df.to_dict('records')
     return data, query_data.to_json(date_format='iso', orient='split'), df.to_json(date_format='iso', orient='split')
@@ -264,16 +259,25 @@ def update_table(topic, date_range):
 def update_graph(jsonified_query_data,jsonified_df):
     # json.loads(jsonified_cleaned_data)
     query_data = pd.read_json(jsonified_query_data, orient='split')
-    
     df = pd.read_json(jsonified_df, orient='split')
     
     words = df.word.unique().tolist()
+    
     fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=False,vertical_spacing=0.009,horizontal_spacing=0.009)
     fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
     for word in words:
         word_results =  query_data[query_data['word'] == word][['freq_in_topic','date']].sort_values(by=['date'])
         word_results.columns = ['frequency','date']
         fig.append_trace({'x':word_results.date,'y':word_results.frequency,'type':'scatter','name': word},1,1)
+    
+#    fig = plotly.subplots.make_subplots(rows=3, cols=1, shared_xaxes=False,vertical_spacing=0.009,horizontal_spacing=0.009)
+#    fig['layout']['margin'] = {'l': 30, 'r': 10, 'b': 50, 't': 25}
+#    for word in words:
+#        word_results =  query_data[query_data['word'] == word][['freq_in_topic','date']].sort_values(by=['date'])
+#        word_results.columns = ['frequency','date']
+#        fig.append_trace({'x':word_results.date,'y':word_results.frequency,'type':'scatter','name': word},1,1)
+#    
+#    
     return fig
 
 
