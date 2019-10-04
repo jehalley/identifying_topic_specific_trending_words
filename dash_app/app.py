@@ -128,7 +128,7 @@ app.layout = html.Div(
                                     options = topics_as_options, value = 'Basketball')
                     ]),
                      
-                    #html.H6('Select a date range to analyze', style={'textAlign': 'center','color': colors['text']}),
+                    html.H6('Select a date range for us to analyze', style={'textAlign': 'center','color': colors['text']}),
                     
                     html.Div(id='output-container'),
                     
