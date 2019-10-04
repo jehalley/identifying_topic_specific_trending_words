@@ -99,9 +99,17 @@ def get_topics_as_options(subreddit_topics_csv):
     topics_as_options = [topic_to_options_dict(topic) for topic in topics]
     return topics_as_options
 
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 subreddit_topics_csv = 'subreddit_topics.csv'
 topics_as_options = get_topics_as_options(subreddit_topics_csv)
+
+colors = {
+    'background': '#111111',
+    'text': '#7FDBFF',
+    "blue": "#4285f4",
+    "white": "#fff2ff"
+}
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -114,11 +122,12 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
                      
 
 
-    html.Div(id='my-dropdown',
+    html.Div(id='my-dropdown'),
+             
     
     dcc.Dropdown(
         options = topics_as_options, value = 'Basketball'
-    )),
+    ),
     
     html.Div(id='output-container'),
     
