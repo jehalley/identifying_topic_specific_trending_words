@@ -14,7 +14,6 @@ import os
 import pandas as pd
 import plotly
 import psycopg2
-import numpy as np
 
 
 #this block of code is for setting up the table that shows when the page loads 
@@ -26,7 +25,7 @@ end_date_string = "2019-05-02"
 connection = psycopg2.connect(host='127.0.0.1', port=5431, user=os.environ['db_login'], password=os.environ['db_pw'], dbname='word')
 
 #query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio  FROM reddit_results WHERE topic = 'Basketball' AND '[2016-01-01, 2017-01-01]'::daterange @> date ORDER BY sub_freq_to_all_freq_ratio  DESC LIMIT 10;"
-query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_2019 WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
+query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
 #query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_2019 WHERE topic = '" + initial_topic + "' AND date >= '" + start_date_string + "' AND date < '" + end_date_string + "';"
 
 cursor = connection.cursor()
@@ -211,7 +210,7 @@ def get_date_range(start_date, end_date):
     [dash.dependencies.Input('topic_from_pulldown', 'children'),
      dash.dependencies.Input('chosen_date_range_string', 'children')])
 def update_table(topic, date_range):
-    query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_2019 WHERE topic = '" + topic + "' AND '[" + date_range + "]'::daterange @> date;"
+    query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results WHERE topic = '" + topic + "' AND '[" + date_range + "]'::daterange @> date;"
     start_date_string = date_range.split(",")[0]
     end_date_string = date_range.split(" ")[1]
     
