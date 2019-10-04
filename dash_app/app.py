@@ -128,7 +128,7 @@ app.layout = html.Div(
                                     options = topics_as_options, value = 'Basketball')
                     ]),
                     html.Div(id='output-container'),
-                    html.H7('Select a date range for us to analyze', style={'textAlign': 'left','color': colors['blue']}),
+                    html.H6('Select a date range for us to analyze', style={'textAlign': 'left','color': colors['blue']}),
                     
                     dcc.DatePickerRange(
                         id='my-date-picker-range',
@@ -140,7 +140,7 @@ app.layout = html.Div(
                     ),
                     html.Div(id='output-container-date-picker-range'),
                     
-                    html.H7('Your Top 10 best Choices for AdWords are:', style={'textAlign': 'center','color': colors['blue']}),
+                    html.H6('Your Top 10 best Choices for AdWords are:', style={'textAlign': 'center','color': colors['blue']}),
 
                     dash_table.DataTable(
                         id='datatable-interactivity',
@@ -163,10 +163,10 @@ app.layout = html.Div(
                     ),
                     html.Div(id='datatable-interactivity-container'),
                     
-                    html.H7('5-Day Rolling Average of Word Frequency in Topic', style={'textAlign': 'center','color': colors['blue']}),
+                    html.H6('5-Day Rolling Average of Word Frequency in Topic', style={'textAlign': 'center','color': colors['blue']}),
                     dcc.Graph(id='graph_rolling_average_frequency'),
                     
-                    html.H7('Word Frequency in Topic', style={'textAlign': 'center','color': colors['blue']}),
+                    html.H6('Word Frequency in Topic', style={'textAlign': 'center','color': colors['blue']}),
                     dcc.Graph(id='graph_frequency'),
                     
                     html.Div(id='topic_from_pulldown', style={'display': 'none'}),
