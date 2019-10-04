@@ -104,11 +104,22 @@ subreddit_topics_csv = 'subreddit_topics.csv'
 topics_as_options = get_topics_as_options(subreddit_topics_csv)
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app.layout = html.Div([
+
+app.layout = html.Div(style={'backgroundColor': colors['background']},
+                children=[
+                        
+                    html.H3('Welcome to WordEdge', style={"backgroundColor": colors["blue"],'textAlign': 'center','color': colors['text']}),
+                    html.H6('Helping you get an edge in your Ad Words Auctions', style={'textAlign': 'center','color': colors['text']}),
+                    html.H6('Select a topic that you would like to advertise in', style={'textAlign': 'center','color': colors['text']}),
+                     
+
+
+    html.Div(id='my-dropdown',
+    
     dcc.Dropdown(
-        id='my-dropdown',
         options = topics_as_options, value = 'Basketball'
     ),
+    
     html.Div(id='output-container'),
     
     dcc.DatePickerRange(
