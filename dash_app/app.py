@@ -118,7 +118,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
     
     dcc.Dropdown(
         options = topics_as_options, value = 'Basketball'
-    ),
+    )),
     
     html.Div(id='output-container'),
     
