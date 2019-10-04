@@ -122,13 +122,11 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
                     
                     html.Div(
                     [
-                    #html.Label('Select City'),
-                    dcc.Dropdown(
-                            id = 'my-dropdown',
-                            options = topics_as_options, value = 'Basketball'
-
-                    ])
-                    ,
+                            #html.Label('Select Topic'),
+                            dcc.Dropdown(
+                                    id = 'my-dropdown',
+                                    options = topics_as_options, value = 'Basketball')
+                    ]),
                      
                     html.Div(id='output-container'),
                     
