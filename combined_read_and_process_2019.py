@@ -205,7 +205,8 @@ def get_changes_in_rolling_average(reddit_df):
                                     .over(windowSpec_day))
     reddit_df = reddit_df.withColumn('change_in_daily_average', 
                                      (col('daily_freq_rolling_average') - col('prev_day_rolling_average')))
-    reddit_df = reddit_df.drop('prev_day_rolling_average', 'day_window')
+    
+    reddit_df = reddit_df.drop('prev_day_rolling_average', 'day_window', 'week_window', 'month_window')
     
 #    windowSpec_week = \
 #     Window \
