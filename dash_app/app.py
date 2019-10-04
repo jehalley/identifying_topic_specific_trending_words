@@ -14,7 +14,7 @@ import os
 import pandas as pd
 import plotly
 import psycopg2
-
+import numpy as np
 
 #this block of code is for setting up the table that shows when the page loads 
 initial_topic = 'Basketball'
@@ -70,9 +70,9 @@ df_with_extra_columns_and_many_rows_per_word = query_data[['topic','word','topic
 df_with_extra_columns = df_with_extra_columns_and_many_rows_per_word.groupby(['topic','word','topic_relevance_x','end_day_freq'], as_index=False).sum()
 df_with_adj_freq = df_with_extra_columns.sort_values('change_in_adjusted_freq', ascending=False).head(10)
 df_with_adj_freq_sorted_by_end_day_freq = df_with_adj_freq.sort_values('end_day_freq', ascending=False)
-df = df_with_adj_freq_sorted_by_end_day_freq[['topic','word','topic_relevance_x','end_day_freq']]
-df.columns = ['topic','word','topic_relevance','ending_frequency']
-
+df_with_adj_freq_sorted_by_end_day_freq['rank'] = 1 + np.arange(len(df_with_adj_freq_sorted_by_end_day_freq ))
+df = df_with_adj_freq_sorted_by_end_day_freq[['rank','topic','word','topic_relevance_x','end_day_freq']]
+df.columns = ['rank','topic','word','topic_relevance','ending_frequency']
 
 #this will be applied to the list of subreddits explained below
 def topic_to_options_dict(x):
@@ -259,9 +259,10 @@ def update_table(topic, date_range):
     df_with_extra_columns = df_with_extra_columns_and_many_rows_per_word.groupby(['topic','word','topic_relevance_x','end_day_freq'], as_index=False).sum()
     df_with_adj_freq = df_with_extra_columns.sort_values('change_in_adjusted_freq', ascending=False).head(10)
     df_with_adj_freq_sorted_by_end_day_freq = df_with_adj_freq.sort_values('end_day_freq', ascending=False)
-    df = df_with_adj_freq_sorted_by_end_day_freq[['topic','word','topic_relevance_x','end_day_freq']]
-    df.columns = ['topic','word','topic_relevance','ending_frequency']
-    
+    df_with_adj_freq_sorted_by_end_day_freq['rank'] = 1 + np.arange(len(df_with_adj_freq_sorted_by_end_day_freq ))
+    df = df_with_adj_freq_sorted_by_end_day_freq[['rank','topic','word','topic_relevance_x','end_day_freq']]
+    df.columns = ['rank','topic','word','topic_relevance','ending_frequency']
+
     data=df.to_dict('records')
     return data, query_data.to_json(date_format='iso', orient='split'), df.to_json(date_format='iso', orient='split')
 
