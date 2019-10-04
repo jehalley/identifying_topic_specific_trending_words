@@ -113,7 +113,7 @@ colors = {
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-app.layout = html.Div(style={'backgroundColor': colors['background']},
+app.layout = html.Div(
                 children=[
                         
                     html.H3('Welcome to WordEdge', style={"backgroundColor": colors["blue"],'textAlign': 'center','color': colors['text']}),
@@ -128,7 +128,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
                                     options = topics_as_options, value = 'Basketball')
                     ]),
                      
-                    html.H6('Select a date range to analyze', style={'textAlign': 'center','color': colors['text']}),
+                    #html.H6('Select a date range to analyze', style={'textAlign': 'center','color': colors['text']}),
                     
                     html.Div(id='output-container'),
                     
