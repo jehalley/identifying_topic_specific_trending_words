@@ -117,8 +117,8 @@ app.layout = html.Div(
                 children=[
                         
                     html.H3('Welcome to WordEdge', style={"backgroundColor": colors["blue"],'textAlign': 'center','color': colors['text']}),
-                    html.H4('Helping you get an edge in your Ad Words Auctions', style={'textAlign': 'center','color': colors['text']}),
-                    html.H6('Select a topic that you would like to advertise in', style={'textAlign': 'left','color': colors['text']}),
+                    html.H4('Helping you get an edge in your Ad Words Auctions', style={'textAlign': 'center','color': colors['blue']}),
+                    html.H6('Select a topic that you would like to advertise in', style={'textAlign': 'left','color': colors['blue']}),
                     
                     html.Div(
                     [
@@ -127,10 +127,8 @@ app.layout = html.Div(
                                     id = 'my-dropdown',
                                     options = topics_as_options, value = 'Basketball')
                     ]),
-                     
-                    html.H6('Select a date range for us to analyze', style={'textAlign': 'left','color': colors['text']}),
-                    
                     html.Div(id='output-container'),
+                    html.H7('Select a date range for us to analyze', style={'textAlign': 'left','color': colors['blue']}),
                     
                     dcc.DatePickerRange(
                         id='my-date-picker-range',
@@ -140,12 +138,10 @@ app.layout = html.Div(
                         start_date = dt(2019, 5, 1),
                         end_date=dt(2019, 5, 2)
                     ),
-                    
-                    html.H6('Your Top 10 best Choices for AdWords are:', style={'textAlign': 'center','color': colors['text']}),
-
-                    
                     html.Div(id='output-container-date-picker-range'),
                     
+                    html.H7('Your Top 10 best Choices for AdWords are:', style={'textAlign': 'center','color': colors['blue']}),
+
                     dash_table.DataTable(
                         id='datatable-interactivity',
                         columns=[
@@ -163,14 +159,14 @@ app.layout = html.Div(
                         selected_rows=[],
                         page_action="native",
                         page_current= 0,
-                        page_size= 15,
+                        page_size= 10,
                     ),
                     html.Div(id='datatable-interactivity-container'),
                     
-                    html.H6('5-Day Rolling Average of Word Frequency in Topic', style={'textAlign': 'center','color': colors['text']}),
+                    html.H7('5-Day Rolling Average of Word Frequency in Topic', style={'textAlign': 'center','color': colors['blue']}),
                     dcc.Graph(id='graph_rolling_average_frequency'),
                     
-                    html.H6('Word Frequency in Topic', style={'textAlign': 'center','color': colors['text']}),
+                    html.H7('Word Frequency in Topic', style={'textAlign': 'center','color': colors['blue']}),
                     dcc.Graph(id='graph_frequency'),
                     
                     html.Div(id='topic_from_pulldown', style={'display': 'none'}),
