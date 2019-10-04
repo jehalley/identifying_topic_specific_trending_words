@@ -105,7 +105,7 @@ subreddit_topics_csv = 'subreddit_topics.csv'
 topics_as_options = get_topics_as_options(subreddit_topics_csv)
 
 colors = {
-    'background': '#111111',
+    'background': '#000000',
     'text': '#7FDBFF',
     "blue": "#4285f4",
     "white": "#fff2ff"
@@ -117,8 +117,8 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
                 children=[
                         
                     html.H3('Welcome to WordEdge', style={"backgroundColor": colors["blue"],'textAlign': 'center','color': colors['text']}),
-                    html.H6('Helping you get an edge in your Ad Words Auctions', style={'textAlign': 'center','color': colors['text']}),
-                    html.H6('Select a topic that you would like to advertise in', style={'textAlign': 'center','color': colors['text']}),
+                    html.H4('Helping you get an edge in your Ad Words Auctions', style={'textAlign': 'center','color': colors['text']}),
+                    html.H6('Select a topic that you would like to advertise in', style={'textAlign': 'left','color': colors['text']}),
                     
                     html.Div(
                     [
@@ -128,6 +128,8 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
                                     options = topics_as_options, value = 'Basketball')
                     ]),
                      
+                    html.H6('Select a date range to analyze', style={'textAlign': 'center','color': colors['text']}),
+                    
                     html.Div(id='output-container'),
                     
                     dcc.DatePickerRange(
@@ -138,6 +140,10 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
                         start_date = dt(2019, 5, 1),
                         end_date=dt(2019, 5, 2)
                     ),
+                    
+                    html.H6('Your Top 10 best Choices for AdWords are:', style={'textAlign': 'center','color': colors['text']}),
+
+                    
                     html.Div(id='output-container-date-picker-range'),
                     
                     dash_table.DataTable(
@@ -159,6 +165,9 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
                         page_current= 0,
                         page_size= 15,
                     ),
+                    
+                    html.H6('5-Day Rolling Average of Word Frequency in Topic', style={'textAlign': 'center','color': colors['text']}),
+
                     html.Div(id='datatable-interactivity-container'),
                     
                     dcc.Graph(id='graph_rolling_average_frequency'),
