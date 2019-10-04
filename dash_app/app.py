@@ -119,59 +119,60 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
                     html.H3('Welcome to WordEdge', style={"backgroundColor": colors["blue"],'textAlign': 'center','color': colors['text']}),
                     html.H6('Helping you get an edge in your Ad Words Auctions', style={'textAlign': 'center','color': colors['text']}),
                     html.H6('Select a topic that you would like to advertise in', style={'textAlign': 'center','color': colors['text']}),
+                    
+                    html.Div(
+                    [
+                    #html.Label('Select City'),
+                    dcc.Dropdown(
+                            id = 'my-dropdown',
+                            options = topics_as_options, value = 'Basketball'
+
+                    ])
+                    ,
                      
-
-
-                html.Div(
-                        id='my-dropdown',
-                        dcc.Dropdown(
-                                options = topics_as_options, value = 'Basketball'
-                                )
-                        ),
-                
-                html.Div(id='output-container'),
-                
-                dcc.DatePickerRange(
-                    id='my-date-picker-range',
-                    min_date_allowed=dt(2019, 3, 1),
-                    max_date_allowed=dt(2019, 5, 31 ),
-                    initial_visible_month=dt(2019, 5, 1),
-                    start_date = dt(2019, 5, 1),
-                    end_date=dt(2019, 5, 2)
-                ),
-                html.Div(id='output-container-date-picker-range'),
-                
-                dash_table.DataTable(
-                    id='datatable-interactivity',
-                    columns=[
-                        {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
-                    ],
-                    data=df.to_dict('records'),
-                    editable=True,
-                    filter_action="native",
-                    sort_action="native",
-                    sort_mode="multi",
-                    column_selectable="single",
-                    row_selectable="multi",
-                    row_deletable=True,
-                    selected_columns=[],
-                    selected_rows=[],
-                    page_action="native",
-                    page_current= 0,
-                    page_size= 15,
-                ),
-                html.Div(id='datatable-interactivity-container'),
-                
-                dcc.Graph(id='graph_rolling_average_frequency'),
-                
-                dcc.Graph(id='graph_frequency'),
-                
-                html.Div(id='topic_from_pulldown', style={'display': 'none'}),
-                html.Div(id='chosen_date_range_string', style={'display': 'none'}),
-                html.Div(id='query_results', style={'display': 'none'}),
-                html.Div(id='top_10_results', style={'display': 'none'})
-                
-            ])
+                    html.Div(id='output-container'),
+                    
+                    dcc.DatePickerRange(
+                        id='my-date-picker-range',
+                        min_date_allowed=dt(2019, 3, 1),
+                        max_date_allowed=dt(2019, 5, 31 ),
+                        initial_visible_month=dt(2019, 5, 1),
+                        start_date = dt(2019, 5, 1),
+                        end_date=dt(2019, 5, 2)
+                    ),
+                    html.Div(id='output-container-date-picker-range'),
+                    
+                    dash_table.DataTable(
+                        id='datatable-interactivity',
+                        columns=[
+                            {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
+                        ],
+                        data=df.to_dict('records'),
+                        editable=True,
+                        filter_action="native",
+                        sort_action="native",
+                        sort_mode="multi",
+                        column_selectable="single",
+                        row_selectable="multi",
+                        row_deletable=True,
+                        selected_columns=[],
+                        selected_rows=[],
+                        page_action="native",
+                        page_current= 0,
+                        page_size= 15,
+                    ),
+                    html.Div(id='datatable-interactivity-container'),
+                    
+                    dcc.Graph(id='graph_rolling_average_frequency'),
+                    
+                    dcc.Graph(id='graph_frequency'),
+                    
+                    html.Div(id='topic_from_pulldown', style={'display': 'none'}),
+                    html.Div(id='chosen_date_range_string', style={'display': 'none'}),
+                    html.Div(id='query_results', style={'display': 'none'}),
+                    html.Div(id='top_10_results', style={'display': 'none'})
+                    
+                    ])
 
 
 @app.callback(
