@@ -4,7 +4,7 @@
 Created on Tue Sep 24 13:55:37 2019
 @author: JeffHalley
 """
-
+import os
 from pyspark.ml.feature import Tokenizer, StopWordsRemover
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, col, window, broadcast, lower, explode, split, avg, sum, lag, to_date
@@ -239,8 +239,8 @@ def get_changes_in_rolling_average(reddit_df):
 def write_to_database(reddit_df):
     url = "jdbc:postgresql://10.0.0.8:5431/word"
     properties = {
-        "user": "jh",
-        "password": "jh",
+        "user": os.environ['db_login'],
+        "password": os.environ['db_pw'],
         "driver": "org.postgresql.Driver",
         "batchsize": "10000"   
     }

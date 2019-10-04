@@ -10,10 +10,12 @@ import dash
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_table
+import os
 import pandas as pd
 import plotly
 import psycopg2
 import numpy as np
+
 
 #this block of code is for setting up the table that shows when the page loads 
 initial_topic = 'Basketball'
@@ -21,7 +23,7 @@ start_date_string = "2019-05-01"
 end_date_string = "2019-05-02"
 
 #connection = psycopg2.connect(host='52.25.211.129', port=5431, user='jh', password='jh', dbname='word')
-connection = psycopg2.connect(host='127.0.0.1', port=5431, user='jh', password='jh', dbname='word')
+connection = psycopg2.connect(host='127.0.0.1', port=5431, user=os.environ['db_login'], password=os.environ['db_pw'], dbname='word')
 
 #query = "SELECT topic, date, word, sub_freq_to_all_freq_ratio  FROM reddit_results WHERE topic = 'Basketball' AND '[2016-01-01, 2017-01-01]'::daterange @> date ORDER BY sub_freq_to_all_freq_ratio  DESC LIMIT 10;"
 query = "SELECT topic, date, word, count, freq_in_topic, sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM reddit_results_2019 WHERE topic = '" + initial_topic + "' AND '[" + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
