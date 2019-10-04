@@ -128,7 +128,7 @@ app.layout = html.Div(
                                     options = topics_as_options, value = 'Basketball')
                     ]),
                      
-                    html.H6('Select a date range for us to analyze', style={'textAlign': 'center','color': colors['text']}),
+                    html.H6('Select a date range for us to analyze', style={'textAlign': 'left','color': colors['text']}),
                     
                     html.Div(id='output-container'),
                     
@@ -165,13 +165,12 @@ app.layout = html.Div(
                         page_current= 0,
                         page_size= 15,
                     ),
-                    
-                    html.H6('5-Day Rolling Average of Word Frequency in Topic', style={'textAlign': 'center','color': colors['text']}),
-
                     html.Div(id='datatable-interactivity-container'),
                     
+                    html.H6('5-Day Rolling Average of Word Frequency in Topic', style={'textAlign': 'center','color': colors['text']}),
                     dcc.Graph(id='graph_rolling_average_frequency'),
                     
+                    html.H6('Word Frequency in Topic', style={'textAlign': 'center','color': colors['text']}),
                     dcc.Graph(id='graph_frequency'),
                     
                     html.Div(id='topic_from_pulldown', style={'display': 'none'}),
