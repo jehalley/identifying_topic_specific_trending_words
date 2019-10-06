@@ -267,7 +267,7 @@ def write_to_database(complete_reddit_df):
         "batchsize": "10000"   
     }
     complete_reddit_df.write.jdbc(url=url, 
-                                  table="reddit_results_refactored", 
+                                  table="reddit_results", 
                                   mode= "overwrite", 
                                   properties=properties)
    
