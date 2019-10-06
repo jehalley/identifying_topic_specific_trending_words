@@ -10,6 +10,8 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_unixtime, col,broadcast, lower, explode
 from pyspark.sql.functions import split, avg, sum, lag, to_date, month
 from pyspark.sql.window import Window
+import pandas as pd
+import psycopg2
 
 
 def start_spark_session():
@@ -277,7 +279,7 @@ if __name__ == "__main__":
     spark = start_spark_session()
     unit_test_directory = 's3a://jeff-halley-s3/unit_test_data/'
 #    unit_test_directory = '/Users/JeffHalley/Documents/GitHub/'\
-#    +'identifying_trending_topics_on_social_media/unit_tests/'
++     +'identifying_trending_topics_on_social_media/unit_tests/'
 #    
     reddit_directory_path = unit_test_directory + 'test_json'
     
@@ -349,3 +351,14 @@ if __name__ == "__main__":
     
     
     write_to_database(complete_reddit_df)
+    connection = psycopg2.connect(host='10.0.0.8', 
+                                  port=5431, 
+                                  user=os.environ['db_login'], 
+                                  password=os.environ['db_pw'],
+                                  dbname='word')
+    query = "select * from unit_test;"
+    query_df = pd.read_sql(query,connection)
+    connection.close()
+    
+    query_df.to_csv(unit_test_directory + 'unit_15_write_to_database.csv')
+    
