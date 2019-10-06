@@ -19,7 +19,7 @@ import numpy as np
 def get_query(topic,start_date_string,end_date_string):
     query = "SELECT topic, date, word, count, freq_in_topic,"\
     +"sub_freq_to_all_freq_ratio, daily_freq_rolling_average FROM "\
-    +"reddit_results_2019 WHERE topic = '" + topic + "' AND '["\
+    +"reddit_results WHERE topic = '" + topic + "' AND '["\
     + start_date_string + ", " + end_date_string + "]'::daterange @> date;"
     
     return query
