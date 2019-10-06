@@ -275,7 +275,7 @@ def write_to_database(complete_reddit_df):
     
 if __name__ == "__main__":
     spark = start_spark_session()
-    unit_test_directory = ''
+    unit_test_directory = 's3a://jeff-halley-s3/unit_test_data/'
 #    unit_test_directory = '/Users/JeffHalley/Documents/GitHub/'\
 #    +'identifying_trending_topics_on_social_media/unit_tests/'
 #    
@@ -290,7 +290,7 @@ if __name__ == "__main__":
     df_with_dates.write.mode('append')\
     .csv(unit_test_directory + 'unit_3_get_date_columns.csv')
     
-    subreddit_topics_csv = unit_test_directory + 'subreddit_topics.csv'
+    subreddit_topics_csv = 's3a://jeff-halley-s3/subreddit_topics.csv'
     subreddit_topics_df = get_subreddit_topics_df(subreddit_topics_csv)  
     df_with_topics = get_topics_column(df_with_dates,subreddit_topics_df)
     df_with_topics.write.mode('append')\
