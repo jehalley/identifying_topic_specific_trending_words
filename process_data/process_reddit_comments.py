@@ -16,7 +16,10 @@ def start_spark_session():
     spark = SparkSession \
     .builder \
     .appName("Reddit DataFrame") \
-    .config("spark.some.config.option", "some-value") \
+    .config("spark.executor.memory", "8gb") \
+    .config("spark.yarn.executor.memoryOverhead", "4000M") \
+    .config("spark.driver.memory", "8gb") \
+    .config("spark.akka.frameSize", "1028") \
     .getOrCreate()
     
     return spark
