@@ -212,7 +212,7 @@ app.layout = html.Div(
                             dcc.Dropdown(
                                     id = 'my-dropdown',
                                     options = topics_as_options, 
-                                    value = 'Basketball')
+                                    value = 'Aquariums')
                     ]),
                             
                     html.Div(id='output-container'),
