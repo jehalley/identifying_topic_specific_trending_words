@@ -1,7 +1,6 @@
 # identifying_trending_topics_on_social_media
-Determine topics corresponding to trending words in two different social media sites.
 
-This project determines new trending words within a 210 different topics by analyzing the conversations occurring within topic-specific communities on the social media site, Reddit.
+This application determines new trending words in 210 different topics by analyzing the conversations occurring within topic-specific communities on the social media site, Reddit.
 
 Summary:
 Word Edge helps its users get the best deals on their google ads purchases. 
