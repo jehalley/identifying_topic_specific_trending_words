@@ -270,14 +270,14 @@ def write_to_database(complete_reddit_df):
         "batchsize": "10000"   
     }
     complete_reddit_df.write.jdbc(url=url, 
-                                  table="reddit_results_config_test", 
+                                  table="reddit_results_config", 
                                   mode= "overwrite", 
                                   properties=properties)
    
     
 if __name__ == "__main__":
     spark = start_spark_session()
-    reddit_directory_path = 's3a://jeff-halley-s3/2019_comments/'
+    reddit_directory_path = 's3a://jeff-halley-s3/split_reddit_comments_2018_07/xaa'
     comments_all_columns_df = get_comments_df(reddit_directory_path)
     comments_df = select_relevant_columns(comments_all_columns_df)
     df_with_dates = get_date_columns(comments_df)
