@@ -168,7 +168,7 @@ def get_topics_as_options(subreddit_topics_csv):
     return topics_as_options
 
 #this block of code is for setting up the table that shows when the page loads 
-initial_topic = 'Basketball'
+initial_topic = 'Aquariums'
 start_date_string = "2019-05-01"
 end_date_string = "2019-05-02"
 
