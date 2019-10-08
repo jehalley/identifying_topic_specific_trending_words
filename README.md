@@ -2,12 +2,12 @@
 
 WordEdge determines new trending words in 210 different topics by analyzing the conversations occurring within topic-specific communities on the social media site, Reddit.
 
-##Summary
+## Summary
 Word Edge helps its users get the best deals on their google ads purchases. Businesses advertising on google ads purchase search terms through an auction. Suppose you wanted to advertise "Basketball Shoes." You might want to purchase the search term, "Basketball Shoes," but because of its popularity it is likely too expensive to be cost effective. 
 
 WordEdge helps users identify the newest trending words in a topic related to their business before those words get cool and so before they get expensive. If you were the basketball-shoe seller described above, WordEdge would help you discover basketball fans' inside jokes, player nicknames and the names of hot new rookies, all of which make great and affordable search term purcahses.
 
-##How it Works
+## How it Works
 WordEdge determines new trending words by aggregating and analyzing the comments in topic-specific communities on Reddit. 
 
 For example, to find what new topics are trending in Basketball, WordEdge would analyze just the comments in Reddit's Basketball-specific communities r/NBA, r/collegebasketball, r/nbastreams and r/fantasybball etc. 
