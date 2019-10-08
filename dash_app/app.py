@@ -168,14 +168,14 @@ def get_topics_as_options(subreddit_topics_csv):
     return topics_as_options
 
 #this block of code is for setting up the table that shows when the page loads 
-initial_topic = 'Aquariums'
-start_date_string = "2019-05-01"
-end_date_string = "2019-05-02"
-
-query = get_query(initial_topic,start_date_string,end_date_string)
-requested_data = get_requested_data(query)
-query_data = get_query_data_df(requested_data,start_date_string,end_date_string)
-df = get_table_df(query_data)
+#initial_topic = 'Aquariums'
+#start_date_string = "2019-05-01"
+#end_date_string = "2019-05-02"
+#
+#query = get_query(initial_topic,start_date_string,end_date_string)
+#requested_data = get_requested_data(query)
+#query_data = get_query_data_df(requested_data,start_date_string,end_date_string)
+#df = get_table_df(query_data)
 
 #the pulldown menu will use the subreddit_topics_csv to generate options
 subreddit_topics_csv = 'subreddit_topics.csv'
