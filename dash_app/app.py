@@ -211,8 +211,7 @@ app.layout = html.Div(
                             #html.Label('Select Topic'),
                             dcc.Dropdown(
                                     id = 'my-dropdown',
-                                    options = topics_as_options, 
-                                    value = 'Aquariums')
+                                    options = topics_as_options)
                     ]),
                             
                     html.Div(id='output-container'),
@@ -226,9 +225,7 @@ app.layout = html.Div(
                         id='my-date-picker-range',
                         min_date_allowed=dt(2019, 3, 1),
                         max_date_allowed=dt(2019, 5, 31 ),
-                        initial_visible_month=dt(2019, 5, 1),
-                        start_date = dt(2019, 5, 1),
-                        end_date=dt(2019, 5, 2)
+                        initial_visible_month=dt(2019, 5, 1)
                     ),
                     
                     html.Div(id='output-container-date-picker-range'),
