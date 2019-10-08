@@ -211,8 +211,7 @@ app.layout = html.Div(
                             #html.Label('Select Topic'),
                             dcc.Dropdown(
                                     id = 'my-dropdown',
-                                    options = topics_as_options, 
-                                    value = 'Aquariums')
+                                    options = topics_as_options)
                     ]),
                             
                     html.Div(id='output-container'),
