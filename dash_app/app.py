@@ -224,7 +224,7 @@ app.layout = html.Div(
                     dcc.DatePickerRange(
                         id='my-date-picker-range',
                         min_date_allowed=dt(2019, 3, 1),
-                        max_date_allowed=dt(2019, 5, 30 ),
+                        max_date_allowed=dt(2019, 6, 1 ),
                         initial_visible_month=dt(2019, 5, 1)
                     ),
                     
