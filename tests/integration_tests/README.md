@@ -14,4 +14,4 @@ script that makes the list to fix this.
 
 All other calculations confirmed by hand. 
 
-Futre modifications, a word will count multiple times in overall wordcount for each topic it is a part of might want to figure out a way of avoiding this
+Future modifications, a word will count multiple times in overall wordcount for each topic it is a part of might want to figure out a way of avoiding this
