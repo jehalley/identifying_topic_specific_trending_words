@@ -50,7 +50,7 @@ def get_query_data_df(requested_data,start_date_string, end_date_string):
     
     #subreddit names seem to pop up occassionaly with the prefix 2f
     query_data_filtered = query_data_prefilter[~query_data_prefilter['word']\
-                                      .str.contains("2f")]
+                                      .str.contains('2f')]
     
     #get average relevance to filter the most relevant words
     average_relevance = pd.DataFrame(query_data_filtered\
@@ -169,8 +169,8 @@ def get_topics_as_options(subreddit_topics_csv):
 
 #this block of code is for setting up the table that shows when the page loads 
 initial_topic = 'Please_choose_a_topic'
-start_date_string = "2019-05-01"
-end_date_string = "2019-05-02"
+start_date_string = '2019-05-01'
+end_date_string = '2019-05-02'
 
 query = get_query(initial_topic,start_date_string,end_date_string)
 requested_data = get_requested_data(query)
@@ -185,8 +185,8 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 colors = {
     'background': '#000000',
     'text': '#7FDBFF',
-    "blue": "#4285f4",
-    "white": "#fff2ff"
+    'blue': '#4285f4',
+    'white': '#fff2ff'
 }
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -195,7 +195,7 @@ app.layout = html.Div(
                 children=[
                         
                     html.H3('Welcome to WordEdge', 
-                            style={"backgroundColor": colors["blue"],
+                            style={'backgroundColor': colors['blue'],
                                    'textAlign': 'center',
                                    'color': colors['text']}),
                     html.H4('Helping you get an edge in your Ad Words Auctions', 
@@ -237,10 +237,10 @@ app.layout = html.Div(
                     dash_table.DataTable(
                         id='datatable-interactivity',
                         columns=[
-                            {"name": i, 
-                             "id": i, 
-                             "deletable": True, 
-                             "selectable": True} for i in df.columns
+                            {'name': i, 
+                             'id': i, 
+                             'deletable': True, 
+                             'selectable': True} for i in df.columns
                         ],
                         style_data_conditional=[
                                 {'if': {'row_index': 'odd'},
@@ -252,15 +252,15 @@ app.layout = html.Div(
                                 },        
                         data=df.to_dict('records'),
                         editable=True,
-                        filter_action="native",
-                        sort_action="native",
-                        sort_mode="multi",
-                        column_selectable="single",
-                        row_selectable="multi",
+                        filter_action='native',
+                        sort_action='native',
+                        sort_mode='multi',
+                        column_selectable='single',
+                        row_selectable='multi',
                         row_deletable=True,
                         selected_columns=[],
                         selected_rows=[],
-                        page_action="native",
+                        page_action='native',
                         page_current= 0,
                         page_size= 10,
                     ),
