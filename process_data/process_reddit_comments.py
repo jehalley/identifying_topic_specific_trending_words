@@ -253,20 +253,20 @@ def get_changes_in_rolling_average(df_with_rolling_avg_daily_freq):
 
 
 def write_to_database(complete_reddit_df):
-    url = "jdbc:postgresql://10.0.0.8:5431/word"
+    url = 'jdbc:postgresql://10.0.0.8:5431/word'
     properties = {
-        "user": os.environ['db_login'],
-        "password": os.environ['db_pw'],
-        "driver": "org.postgresql.Driver",
-        "batchsize": "10000"   
+        'user': os.environ['db_login'],
+        'password': os.environ['db_pw'],
+        'driver': 'org.postgresql.Driver',
+        'batchsize': '10000'   
     }
     complete_reddit_df.write.jdbc(url=url, 
-                                  table="reddit_results", 
-                                  mode= "overwrite", 
+                                  table='reddit_results', 
+                                  mode= 'overwrite', 
                                   properties=properties)
    
     
-if __name__ == "__main__":
+if __name__ == '__main__':
     spark = start_spark_session()
     reddit_directory_path = 's3a://jeff-halley-s3/2019_comments/'
     comments_all_columns_df = get_comments_df(reddit_directory_path)
