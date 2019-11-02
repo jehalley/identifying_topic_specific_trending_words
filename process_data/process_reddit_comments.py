@@ -13,13 +13,13 @@ from pyspark.sql.window import Window
 
 
 def start_spark_session():
-    spark = SparkSession \
-    .builder \
-    .appName("Reddit DataFrame") \
-    .config("spark.executor.memory", "8gb") \
-    .config("spark.yarn.executor.memoryOverhead", "4000M") \
-    .config("spark.driver.memory", "8gb") \
-    .config("spark.akka.frameSize", "1028") \
+    spark = SparkSession\
+    .builder\
+    .appName('Reddit DataFrame')\
+    .config('spark.executor.memory', '8gb')\
+    .config('spark.yarn.executor.memoryOverhead', '4000M')\
+    .config('spark.driver.memory', '8gb')\
+    .config('spark.akka.frameSize', '1028')\
     .getOrCreate()
     
     return spark
@@ -53,11 +53,11 @@ def get_date_columns(comments_df):
     
     #date is needed to groupby date for daily word counts
     comments_with_date_time_and_date_df = comments_with_date_time_df\
-    .withColumn("date", to_date(col("date_time")))
+    .withColumn('date', to_date(col('date_time')))
     
     #get month column
     df_with_date_columns = comments_with_date_time_and_date_df\
-    .withColumn("month", month(to_date(col("date_time"))))
+    .withColumn('month', month(to_date(col('date_time'))))
   
     return df_with_date_columns
 
@@ -214,24 +214,15 @@ def get_topic_freq_and_specificity(df_with_word_ct_per_day_and_topic):
 
 
 def get_rolling_avg_daily_freq(df_with_topic_freq_and_specificity):
-    df_with_freqs_and_tmstmp = df_with_topic_freq_and_specificity\
-    .withColumn('tmstmp', df_with_topic_freq_and_specificity\
-                .date.cast('timestamp'))
-    
-    days = lambda i: i * 86400
-    
     windowSpec_day = \
     Window \
      .partitionBy(['topic','word'])\
-     .orderBy(col('tmstmp').cast('long'))\
-     .rangeBetween(-days(5), 0)
+     .orderBy(col('date'))\
+     .rowsBetween(-4, 0)
      
-    df_with_rolling_avg_daily_freq_and_tmstmp = df_with_freqs_and_tmstmp\
-    .withColumn('daily_freq_rolling_average', avg("freq_in_topic")\
+    df_with_rolling_avg_daily_freq = df_with_topic_freq_and_specificity\
+    .withColumn('daily_freq_rolling_average', avg('freq_in_topic')\
                 .over(windowSpec_day))
-
-    df_with_rolling_avg_daily_freq =  df_with_rolling_avg_daily_freq_and_tmstmp\
-    .drop('tmstmp')
     
     return df_with_rolling_avg_daily_freq
 
