@@ -91,7 +91,6 @@ def get_topics_column(df_with_date_columns,subreddit_topics):
     
     return df_with_topics_column
 
-### HERE IS WHERE IT SHOULD BE EXPORTED TO ELASTIC SEARCH
 
 def get_partitioned_df(comments_df_with_topics_column):
     #partitioning before row size increases when comments are split to words
@@ -142,7 +141,6 @@ def get_word_counts(tokenized_df):
     .groupBy('topic','word','date')\
     .count()
     
-    #reddit_df = reddit_df.cache()
     return df_with_word_cts_by_topic_and_date
 
 
