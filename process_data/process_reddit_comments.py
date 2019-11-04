@@ -24,20 +24,23 @@ def start_spark_session():
     
     return spark
 
+
 def get_comments_df(directory_path):
-    #read in jsons as pyspark df
+    # read in jsons as pyspark df
     comments_all_columns_df = spark.read.json(reddit_directory_path)
     
     return comments_all_columns_df
 
+
 def select_relevant_columns(comments_all_columns_df):
-    #only selecting columns that are relevant to counting words in each topic
+    # only selecting columns that are relevant to counting words in each topic
     comments_df = comments_all_columns_df.select('created_utc',
                                                  'body',
                                                  'permalink',
                                                  'score',
                                                  'subreddit')
     return comments_df
+
 
 def get_date_columns(comments_df):  
     '''Some of these dates might seem redundant but postgres takes a regular 
@@ -51,11 +54,11 @@ def get_date_columns(comments_df):
     comments_with_date_time_df = comments_df\
     .withColumn('date_time', from_unixtime('created_utc'))
     
-    #date is needed to groupby date for daily word counts
+    # date is needed to groupby date for daily word counts
     comments_with_date_time_and_date_df = comments_with_date_time_df\
     .withColumn('date', to_date(col('date_time')))
     
-    #get month column
+    # get month column
     df_with_date_columns = comments_with_date_time_and_date_df\
     .withColumn('month', month(to_date(col('date_time'))))
   
@@ -63,7 +66,7 @@ def get_date_columns(comments_df):
 
 
 def get_subreddit_topics_df(subreddit_topics_csv):
-    #convert subreddit topics csv to df, this will be used to get topics column
+    # convert subreddit topics csv to df, this will be used to get topics column
     subreddit_topics = spark.read\
     .csv(subreddit_topics_csv, header='true', inferSchema='true')
     
@@ -74,18 +77,18 @@ def get_subreddit_topics_df(subreddit_topics_csv):
 
 
 def get_topics_column(df_with_date_columns,subreddit_topics):
-    #insert topic column into reddit_df
+    # insert topic column into reddit_df
     df_with_lower_case_subreddit_columns = df_with_date_columns\
     .withColumn('subreddit', lower(col('subreddit')))
     
     df_with_unfiltered_topics_column = df_with_lower_case_subreddit_columns\
     .join(broadcast(subreddit_topics), on = 'subreddit', how = 'left_outer')
     
-    #clean dataframe
+    # clean dataframe
     df_with_filtered_unsplit_topics_column = df_with_unfiltered_topics_column\
     .filter(df_with_unfiltered_topics_column.topic.isNotNull())
     
-    #for topics with multiple topics split into single topics
+    # for topics with multiple topics split into single topics
     df_with_topics_column = df_with_filtered_unsplit_topics_column\
     .withColumn('topic', explode(split(col('topic'), ',')))
     
@@ -93,27 +96,28 @@ def get_topics_column(df_with_date_columns,subreddit_topics):
 
 
 def get_partitioned_df(comments_df_with_topics_column):
-    #partitioning before row size increases when comments are split to words
+    # partitioning before row size increases when comments are split to words
     partitioned_df = comments_df_with_topics_column\
     .repartition(200,['topic','month'])
     
     return partitioned_df
 
+
 def get_tokenized_df(partitioned_df):
-    #split into individual words
+    # split into individual words
     tokenizer = Tokenizer(inputCol='body', outputCol='words_token')
     tokenized_but_unsplit_still_has_stop_words_and_punctuation_df = tokenizer\
     .transform(partitioned_df)\
     .select('topic','date_time','month','date', 'words_token')
     
-    #remove stop words
+    # remove stop words
     remover = StopWordsRemover(inputCol='words_token', 
                                outputCol='words_no_stops')
     tokenized_but_unsplit_still_has_punctuation_df = remover\
     .transform(tokenized_but_unsplit_still_has_stop_words_and_punctuation_df)\
     .select('topic','words_no_stops','date_time','month','date')
     
-    #remove punctuation
+    # remove punctuation
     tokenized_but_unsplit_df = tokenized_but_unsplit_still_has_punctuation_df\
     .withColumn('words_and_punct', explode('words_no_stops'))\
     .select('topic','words_and_punct','date_time','month','date')
@@ -128,10 +132,11 @@ def get_tokenized_df(partitioned_df):
     tokenized_and_split_has_duplicates = df_split_has_nonletters\
     .filter(df_split_has_nonletters['word'].rlike('[a-zA-Z]'))
     
-    #duplicates dropped to ignore cases of someone using a word in the same post
+    # duplicates dropped to ignore cases of someone using a word in the same post
     tokenized_df = tokenized_and_split_has_duplicates.dropDuplicates()
     
     return tokenized_df
+
 
 def get_word_counts(tokenized_df):                              
     '''split comment body into indivdidual words at any nonword character, 
@@ -196,7 +201,7 @@ def get_total_word_count_per_day_and_topic(df_with_total_cts_for_all_words):
 
 
 def get_topic_freq_and_specificity(df_with_word_ct_per_day_and_topic):
-    #make sub_freq to all_freq ratio
+    # make sub_freq to all_freq ratio
     df_with_word_freq_in_topic = df_with_word_ct_per_day_and_topic\
     .withColumn('freq_in_topic', 
                          ((col('count')/
@@ -226,7 +231,7 @@ def get_rolling_avg_daily_freq(df_with_topic_freq_and_specificity):
 
 
 def get_changes_in_rolling_average(df_with_rolling_avg_daily_freq):
-    #make column with previous day adjusted frequency
+    # make column with previous day adjusted frequency
     windowSpec_day = \
      Window \
      .partitionBy(['topic','word'])\
@@ -247,7 +252,6 @@ def get_changes_in_rolling_average(df_with_rolling_avg_daily_freq):
     .drop('prev_day_rolling_average')
     
     return complete_reddit_df
-
 
 
 def write_to_database(complete_reddit_df):

@@ -14,7 +14,7 @@ import pandas as pd
 def get_general_topics_df(page):
     soup = BeautifulSoup(open(page), 'html.parser')
     subreddit_topics = pd.DataFrame(columns=['topic', 'subreddit'])
-    h2s_and_h3s = soup.find_all(['h2','h3'])
+    h2s_and_h3s = soup.find_all(['h2', 'h3'])
     for h2 in h2s_and_h3s:
         header = h2.strong
         if header is not None:
@@ -25,22 +25,20 @@ def get_general_topics_df(page):
             continue
         if node is not None:
             subreddit = node.text.splitlines()
-        subreddits_df = pd.DataFrame(subreddit, columns = ['subreddit'])
+        subreddits_df = pd.DataFrame(subreddit, columns=['subreddit'])
         subreddits_df['topic'] = topic
         subreddit_topics = pd.concat([subreddit_topics, subreddits_df],
                                      ignore_index=True, sort=True)
-    
     for h2 in h2s_and_h3s:
         header = h2.em
         if header is not None:
             topic = header.text
-        
         node = h2.next_element.next_element.next_element.next_element
         if isinstance(node, NavigableString):
             continue
         if node is not None:
             subreddit = node.text.splitlines()
-        subreddits_df = pd.DataFrame(subreddit, columns = ['subreddit'])
+        subreddits_df = pd.DataFrame(subreddit, columns=['subreddit'])
         subreddits_df['topic'] = topic
         subreddit_topics = pd.concat([subreddit_topics, subreddits_df],
                                      ignore_index=True, sort=True)
@@ -50,15 +48,11 @@ def get_vg_topic_df(vg_page):
     vg_subreddits = []
     vg_soup = BeautifulSoup(open(vg_page), 'html.parser')
     wiki = vg_soup.find("div", {"class": "md wiki"})
-     
     for p in wiki.find_all('p'):                         
-        for a in p.find_all('a', {'rel': 'nofollow'}):   
-     
-            tag_text = str(a.text)                       
-     
+        for a in p.find_all('a', {'rel': 'nofollow'}):
+            tag_text = str(a.text)
             if tag_text.startswith('/r/'):               
-                vg_subreddits.append(tag_text)                 
-    
+                vg_subreddits.append(tag_text)
     vg_subs = pd.DataFrame(columns=['topic', 'subreddit'])
     vg_subs['subreddit'] = vg_subreddits
     vg_subs['topic'] = "Video Games"
@@ -68,7 +62,7 @@ def get_subreddit_topics_df(general_topics_df, vg_subs_df):
     subreddit_topics_df = pd.concat([general_topics_df, vg_subs_df], 
                                     ignore_index=True, sort=True)
     subreddit_topics_df = subreddit_topics_df.groupby('subreddit')['topic']\
-    .apply(','.join)
+        .apply(','.join)
     subreddit_topics_df = subreddit_topics_df.to_frame()
     subreddit_topics_df.reset_index(level=0, inplace=True)
     
@@ -77,128 +71,94 @@ def get_subreddit_topics_df(general_topics_df, vg_subs_df):
 def clean_subreddit_topics_df(subreddit_topics_df):
     #this gets rid of the r/ and / in front of subreddit names
     subreddit_topics_df['subreddit'] = subreddit_topics_df['subreddit']\
-    .str.replace('r/','')
-    
+        .str.replace('r/', '')
     subreddit_topics_df['subreddit'] = subreddit_topics_df['subreddit']\
-    .str.replace('/','')
-    
+        .str.replace('/', '')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('"','')
-    
+        .str.replace('"', '')
     #for some reason the scraping put wallpapers on a lot of things that it doesn't belong on
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace(',Wallpapers','')
-    
+        .str.replace(',Wallpapers', '')
     #Netflix related got put on a lot of things that are not netflix related
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('TV,Netflix Related','TV,NR')
-    
+        .str.replace('TV,Netflix Related', 'TV,NR')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace(',Netflix Related','')
-    
+        .str.replace(',Netflix Related', '')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('TV,NR','TV,Netflix Related')
-    
+        .str.replace('TV,NR', 'TV,Netflix Related')
     #automotive classified as writing automotive
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Automotive,Writing','Automotive')
-    
+        .str.replace('Automotive,Writing', 'Automotive')
     #outdoors classified as outdoors car companies
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Outdoors,Car companies','Outdoors')
-    
+        .str.replace('Outdoors,Car companies', 'Outdoors')
     #Design/carcompanies
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Design,Car companies','Design')
-    
+        .str.replace('Design,Car companies', 'Design')
     #nostaliga/time has politics in it
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Nostalgia/Time,Politics','Nostalgia/Time')
-    
+        .str.replace('Nostalgia/Time,Politics', 'Nostalgia/Time')
     #photography film all have car companies
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Photography/Film,Car companies','Photography/Film')
-    
+        .str.replace('Photography/Film,Car companies', 'Photography/Film')
     #cryptocurrency in a lot of nonrelated things
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace(',CryptoCurrency','')
-    
+        .str.replace(',CryptoCurrency', '')
     #self improvement in a lot of thing it shouln't be in
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Self-Improvement,Sex','Self-Improvement')
-    
+        .str.replace('Self-Improvement,Sex', 'Self-Improvement')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Self-Improvement,Programming','Programming,Self-Improvement')
-    
+        .str.replace('Self-Improvement,Programming', 'Programming,Self-Improvement')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Self-Improvement,','')
-    
+        .str.replace('Self-Improvement,', '')
     #politics in things it shouldn't be in Unexpected,Politics
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Shitty,Politics','Shitty')
-    
+        .str.replace('Shitty,Politics', 'Shitty')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Unexpected,Politics','Unexpected')
-    
+        .str.replace('Unexpected,Politics', 'Unexpected')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Visually Appealing,Politics','Visually Appealing')
-    
+        .str.replace('Visually Appealing,Politics', 'Visually Appealing')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Categorize Later,Politics','Categorize Later')
-
+        .str.replace('Categorize Later,Politics', 'Categorize Later')
     #instruments in with sports
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Sports,Instruments','Sports')
-    
+        .str.replace('Sports,Instruments', 'Sports')
     #scary weird mixed in with support
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Support,Scary/Weird','Support')
-    
+        .str.replace('Support,Scary/Weird', 'Support')
     #scary weird mixed in with support
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Tech Related,Car companies','Tech Related')
-
+        .str.replace('Tech Related,Car companies', 'Tech Related')
     #Tech Support
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Tools,Tech Support','Tools')
-    
+        .str.replace('Tools,Tech Support',  'Tools')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Travel,Tech Support','Travel')
-
+        .str.replace('Travel,Tech Support', 'Travel')
     #TV,Soccer
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('TV,Soccer','TV')
-    
+        .str.replace('TV,Soccer', 'TV')
     #Neckbeard mixed with cute
     #Cute,Neckbeard
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Cute,Neckbeard','Cute')
-    
+        .str.replace('Cute,Neckbeard', 'Cute')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Dogs,Neckbeard','Dogs')
-    
+        .str.replace('Dogs,Neckbeard', 'Dogs')
     #Conspiracy,Dogs
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Conspiracy,Dogs','Conspiracy')
-    
+        .str.replace('Conspiracy,Dogs', 'Conspiracy')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Cringe,Dogs','Cringe')
-    
+        .str.replace('Cringe,Dogs', 'Cringe')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Facebook,Dogs','Cringe')
-    
+        .str.replace('Facebook,Dogs', 'Cringe')
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Meta,Dogs','Cringe')
-    
+        .str.replace('Meta,Dogs', 'Cringe')
     #CringScifi
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('Cringe,Sci-fi','Cringe')
-    
+        .str.replace('Cringe,Sci-fi', 'Cringe')
     #General,Physics
     subreddit_topics_df['topic'] = subreddit_topics_df['topic']\
-    .str.replace('General,Physics','General')
+        .str.replace('General,Physics', 'General')
 
-    
     return subreddit_topics_df
 
     
