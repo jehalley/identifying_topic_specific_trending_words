@@ -138,10 +138,7 @@ def get_tokenized_df(partitioned_df):
     return tokenized_df
 
 
-def get_word_counts(tokenized_df):                              
-    '''split comment body into indivdidual words at any nonword character, 
-    group by subreddit and day window, month included b/c needed later'''
-    
+def get_word_counts(tokenized_df):                                  
     df_with_word_cts_by_topic_and_date = tokenized_df\
     .groupBy('topic','word','date')\
     .count()
