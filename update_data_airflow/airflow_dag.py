@@ -79,7 +79,7 @@ def should_run():
     if already_up_to_date is False:
         file_path = get_newest_comments_file(latest_comment_file_name)
         upload_newest_comments_file(file_path)
-        return "process_reddit_data"
+        return "start_spark_cluster"
     else:
         return "data_is_already_up_to_date"
 
@@ -101,15 +101,22 @@ with DAG('update_data_if_not_already_up_to_date',
          ) as dag:
 
     cond = BranchPythonOperator(
-        task_id='condition',
+        task_id='check_if_data_is_up_to_date',
         python_callable=should_run,
         dag=dag,
     )
 
     data_is_already_up_to_date = DummyOperator(task_id='data_is_already_up_to_date')
+
+    start_spark_cluster = BashOperator(task_id='start_spark_cluster',
+                                       bash_command='/usr/local/spark/sbin/start-all.sh')
+
     process_reddit_data = BashOperator(task_id='process_data',
-                             bash_command= 'spark-submit --master spark://10.0.0.16:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3, --packages org.postgresql:postgresql:42.2.5 /identifying_trending_topics_on_social_media/process_data/process_reddit_comments.py')
+                             bash_command='/usr/local/spark/sbin/spark-submit --master spark://10.0.0.16:7077 --packages org.apache.hadoop:hadoop-aws:2.7.3, --packages org.postgresql:postgresql:42.2.5 /identifying_trending_topics_on_social_media/process_data/process_reddit_comments.py')
+
+    stop_spark_cluster = BashOperator(task_id='stop_spark_cluster',bash_command='/usr/local/spark/sbin/stop-all.sh')
 
 
+cond >> start_spark_cluster >> process_reddit_data >> stop_spark_cluster
+cond >> data_is_already_up_to_date
 
-cond >> [data_is_already_up_to_date, process_reddit_data]
