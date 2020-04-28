@@ -12,7 +12,7 @@ WordEdge determines new trending words by aggregating and analyzing the comments
 
 For example, to find what new topics are trending in Basketball, WordEdge would analyze just the comments in Reddit's Basketball-specific communities r/NBA, r/collegebasketball, r/nbastreams and r/fantasybball etc. 
 
-When users visit the WordEdge site, http://bit.ly/wordedge_site, they simply choose their topic of interest, and specify a date range. 
+When users visit the WordEdge site, (no longer active, but screencap of functionality can be found here https://www.youtube.com/watch?v=ZJfajIkugrU) they simply choose their topic of interest, and specify a date range. 
 
 The users are then provided with the 10 most specific and most trending words related to their topic. Additionally, charts are provided so that users can see how the words' frequencies have changed over time. 
 
